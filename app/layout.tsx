@@ -1,15 +1,18 @@
+import Navbar from '@/components/navbar/Navbar';
 import './globals.css';
-import Navbar from '@/components/Navbar';
+import { ClerkProvider } from '@clerk/nextjs';
+
+import Providers from '@/providers';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Next.js Project',
-  description: 'A Next.js project with TypeScript and TailwindCSS.',
-  keywords: 'Next.js, Typescript, TailwindCSS',
+  title: 'HomeAway',
+  description: 'Feel at home, away from home.',
 };
+
 
 export default function RootLayout({
   children,
@@ -17,11 +20,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en'>
+    <ClerkProvider>
+    <html lang='en' suppressHydrationWarning>
       <body className={inter.className}>
-        <Navbar />
-        <main className='max-w-3xl mx-auto py-10'>{children}</main>
+        <Providers>
+          <Navbar />
+          <main className='container py-10'>{children}</main>
+        </Providers>
       </body>
     </html>
+  </ClerkProvider>
   );
 }
