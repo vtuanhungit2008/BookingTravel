@@ -1,15 +1,17 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-    images: {
-      remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: 'www.course-api.com',
-          port: '',
-          pathname: '/images/**',
-        },
-      ],
-    },
-  };
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gxshearnxcmnszxnqfum.supabase.co',
+      },
+    ],
+  },
+};
 export default nextConfig;

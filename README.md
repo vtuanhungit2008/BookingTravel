@@ -1649,25 +1649,25 @@ model Profile {
   properties      Property[]
 }
 
-model Property {
-  id          String     @id @default(uuid())
-  name        String
-  tagline     String
-  category    String
-  image       String
-  country     String
-  description String
-  price       Int
-  guests      Int
-  bedrooms    Int
-  beds        Int
-  baths       Int
-  amenities   String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId   String
-}
+  model Property {
+    id          String     @id @default(uuid())
+    name        String
+    tagline     String
+    category    String
+    image       String
+    country     String
+    description String
+    price       Int
+    guests      Int
+    bedrooms    Int
+    beds        Int
+    baths       Int
+    amenities   String
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+    profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+    profileId   String
+  }
 ```
 
 ### Property Schema
