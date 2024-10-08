@@ -4,8 +4,9 @@ import { auth, clerkClient, currentUser } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { uploadImage } from './supabase';
+import { supabase, uploadImage } from './supabase';
 import { imageSchema, profileSchema, propertySchema, validateWithZodSchema } from './schemas';
+import { Message } from './types';
 
 const renderError = (error: unknown): { message: string } => {
   console.log(error);
@@ -13,6 +14,7 @@ const renderError = (error: unknown): { message: string } => {
     message: error instanceof Error ? error.message : 'An error occurred',
   };
 };
+
 export const createProfileAction = async (
   prevState: any,
   formData: FormData
@@ -262,3 +264,18 @@ export const fetchFavorites = async () => {
   });
   return favorites.map((favorite) => favorite.property);
 };
+
+
+
+
+export const fetchPropertyDetails = (id: string) => {
+  return db.property.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      profile: true,
+    },
+  });
+};
+

@@ -3,7 +3,7 @@ export type actionFunction = (
     formData: FormData
   ) => Promise<{ message: string }>;
 
-  export type PropertyCardProps = {
+export type PropertyCardProps = {
     image: string;
     id: string;
     name: string;
@@ -11,3 +11,14 @@ export type actionFunction = (
     country: string;
     price: number;
   };
+export  interface Message {
+  id: number;
+  username: string;
+  message: string;
+  inserted_at: string;
+ 
+}
+export type MessageProps = {
+  username: string;
+  message: string;
+};
