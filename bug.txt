@@ -1,0 +1,7 @@
+-----Lỗi cần fix -------
+
+1. Khi xóa user trên db mà vẫn còn dữ liệu trên cleck thì bị confict
+2. Đăng nhập ít bảo mật
+3. Client load component khá lâu
+4. Trang homepage khá thô
+5. 
