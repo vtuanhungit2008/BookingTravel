@@ -4,6 +4,7 @@ import { useProperty } from "@/utils/store";
 import ConfirmBooking from "./ConfirmBooking";
 import BookingForm from "./BookingForm";
 function BookingContainer() {
+  
   const { range } = useProperty((state) => state);
   console.log(range);
   
