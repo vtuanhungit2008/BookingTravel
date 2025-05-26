@@ -4,4 +4,3 @@
 2. Đăng nhập ít bảo mật
 3. Client load component khá lâu
 4. Trang homepage khá thô
-5. 

@@ -1,30 +1,26 @@
 'use client';
 
+import { useFormState } from 'react-dom';
 import { toggleFavoriteAction } from '@/utils/action';
-import { usePathname } from 'next/navigation';
-import FormContainer from '../form/formcontanier';
 import { CardSubmitButton } from '../form/cardsubmitbutton';
 
-
-type FavoriteToggleFormProps = {
+type Props = {
   propertyId: string;
   favoriteId: string | null;
 };
 
-function FavoriteToggleForm({
-  propertyId,
-  favoriteId,
-}: FavoriteToggleFormProps) {
-  const pathname = usePathname();
-  const toggleAction = toggleFavoriteAction.bind(null, {
-    propertyId,
+export default function FavoriteToggleForm({ propertyId, favoriteId }: Props) {
+  const [state, formAction] = useFormState(toggleFavoriteAction, {
     favoriteId,
-    pathname,
   });
+
+  const newFavoriteId = state?.favoriteId ?? null;
+
   return (
-    <FormContainer action={toggleAction}>
-      <CardSubmitButton isFavorite={favoriteId ? true : false} />
-    </FormContainer>
+    <form action={formAction}>
+      <input type="hidden" name="propertyId" value={propertyId} />
+      <input type="hidden" name="favoriteId" value={newFavoriteId ?? ''} />
+      <CardSubmitButton isFavorite={!!newFavoriteId} />
+    </form>
   );
 }
-export default FavoriteToggleForm;

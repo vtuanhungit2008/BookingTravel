@@ -19,6 +19,7 @@ function LinksDropdown() {
   console.log("userid :", userId);
 
   const isAdminUser = userId === process.env.ADMIN_USER_ID;
+  
   if (isAdminUser) {
     console.log("is Admin");
   } else {
@@ -32,7 +33,7 @@ function LinksDropdown() {
           <UserIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-52" align="start" sideOffset={10}>
+      <DropdownMenuContent className="w-[197px]" align="start" sideOffset={10}>
         <SignedOut>
           <DropdownMenuItem>
             <SignInButton mode="modal">

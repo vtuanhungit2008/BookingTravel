@@ -2,7 +2,7 @@ import { categories } from '@/utils/categories';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 import Link from 'next/link';
 
-function  CategoriesList({
+function CategoriesList({
   category,
   search,
 }: {
@@ -12,8 +12,8 @@ function  CategoriesList({
   const searchTerm = search ? `&search=${search}` : '';
   return (
     <section>
-      <ScrollArea className='py-6 ml-5'>
-        <div className='flex gap-x-4'>
+      <ScrollArea className="py-3 sm:ml-10 md:ml-9">
+        <div className="flex gap-x-4 sm:gap-x-5 md:gap-x-3 overflow-x-auto">
           {categories.map((item) => {
             const isActive = item.label === category;
             return (
@@ -22,20 +22,19 @@ function  CategoriesList({
                 href={`/?category=${item.label}${searchTerm}`}
               >
                 <article
-                  className={`p-3 flex flex-col items-center cursor-pointer duration-300  hover:text-primary w-[100px] ${
-                    isActive ? 'text-primary' : ''
-                  }`}
+                  className={`p-3 flex flex-col items-center cursor-pointer duration-300 hover:text-primary w-[80px] sm:w-[100px] md:w-[120px] ${isActive ? 'text-primary' : ''}`}
                 >
-                  <item.icon className='w-8 h-8 ' />
-                  <p className='capitalize text-sm mt-1'>{item.label}</p>
+                  <item.icon className="w-4  h-4 sm:w-8 sm:h-8 md:w-8 md:h-10" />
+                  <p className="capitalize text-xs sm:text-sm md:text-base mt-1">{item.label}</p>
                 </article>
               </Link>
             );
           })}
         </div>
-        <ScrollBar orientation='horizontal' />
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </section>
   );
 }
+
 export default CategoriesList;

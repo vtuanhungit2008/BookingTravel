@@ -18,6 +18,7 @@ import UserInfo from '@/components/properties/Userinfo';
 import SubmitReview from '@/components/reviews/SubmitReview';
 import { auth } from '@clerk/nextjs/server';
 import PropertyReviews from '@/components/reviews/PropertyReviews';
+import RecordView from '@/components/properties/RecordView';
 
 
 const DynamicMap = dynamic(
@@ -37,6 +38,7 @@ const DynamicBookingWrapper = dynamic(
 );
 
 async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+  
   const property = await fetchPropertyDetails(params.id);
   if (!property) redirect('/');
   const { baths, bedrooms, beds, guests } = property;
@@ -49,7 +51,7 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
     userId && isNotOwner && !(await findExistingReview(userId, property.id));
 
   return (
-    <section>
+    <section className='ml-5 mr-3 mt-2'>
       <BreadCrumbs name={property.name} />
       <header className='flex justify-between items-center mt-4'>
         <h1 className='text-4xl font-bold capitalize'>{property.tagline}</h1>
@@ -88,6 +90,7 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
     {/* after two column section */}
     <SubmitReview propertyId={property.id} />
     <PropertyReviews propertyId={property.id} />
+    <RecordView propertyId={property.id} />
   </section>
   {/* {reviewDoesNotExist && <SubmitReview propertyId={property.id} />} */}
     </section>

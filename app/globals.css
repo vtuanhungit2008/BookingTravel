@@ -64,7 +64,13 @@
     @apply bg-background text-foreground;
   }
 }
+.markdown-container h1 {
+  @apply text-2xl text-gray-800;
+}
 
+.markdown-container p {
+  @apply text-base text-gray-600;
+}
 
 @layer components {
   .container {
