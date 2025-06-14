@@ -9,6 +9,9 @@ import { createReviewSchema, imageSchema, profileSchema, propertySchema, searchA
 import { Message } from './types';
 import { calculateTotals } from './calculateTotals';
 import { formatDate } from './format';
+import { findProvinceByCode } from './vietnamProvinces';
+import { cache } from 'react';
+import { cookies } from 'next/headers';
 
 const renderError = (error: unknown): { message: string } => {
   console.log(error);
@@ -150,16 +153,25 @@ export const createPropertyAction = async (
   formData: FormData
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
+
   try {
     const rawData = Object.fromEntries(formData);
-    const file = formData.get('image') as File;
-    console.log(
-      "data",rawData);
-    
+    const file = formData.get("image") as File;
+
+    // 👉 Tìm tên tỉnh từ mã code
+    const provinceCode = rawData.country as string;
+    const province = findProvinceByCode(provinceCode);
+
+    if (!province) {
+      throw new Error("Mã tỉnh không hợp lệ");
+    }
+
+    // Gán lại tên tỉnh vào rawData.country
+    rawData.country = province.name;
+
     const validatedFields = validateWithZodSchema(propertySchema, rawData);
     const validatedFile = validateWithZodSchema(imageSchema, { image: file });
-    console.log("foe",validatedFields);
-    
+
     const fullPath = await uploadImage(validatedFile.image);
 
     await db.property.create({
@@ -172,23 +184,48 @@ export const createPropertyAction = async (
   } catch (error) {
     return renderError(error);
   }
-  redirect('/');
+
+  redirect("/");
 };
 
 
-export const fetchProperties = async ({
+export const fetchProperties = cache(async ({
   search = '',
   category,
+  location,
 }: {
   search?: string;
   category?: string;
+  location?: string;
 }) => {
   const properties = await db.property.findMany({
     where: {
-      category,
-      OR: [
-        { name: { contains: search, mode: 'insensitive' } },
-        { tagline: { contains: search, mode: 'insensitive' } },
+      AND: [
+        category ? { category } : {},
+        location
+          ? {
+              country: {
+                contains: location,
+                mode: 'insensitive',
+              },
+            }
+          : {},
+        {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+            {
+              tagline: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
       ],
     },
     select: {
@@ -200,8 +237,9 @@ export const fetchProperties = async ({
       price: true,
     },
   });
+
   return properties;
-};
+});
 
 export const fetchFavoriteId = async ({
   propertyId,
@@ -405,52 +443,91 @@ export const fetchPropertyDetails = (id: string) => {
     },
   });
 };
+export const getOptionalAuthUser = async () => {
+  const user = await currentUser();
 
-export const createBookingAction = async (prevState: {
+  // Trả về `null` nếu không đăng nhập
+  return user ?? null;
+};
+export const createBookingAction = async (form: {
   propertyId: string;
   checkIn: Date;
   checkOut: Date;
+  roomType: 'STANDARD' | 'VIP' | 'PRESIDENT';
+  guestInfo?: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
 }) => {
-  const user = await getAuthUser();
-  await db.booking.deleteMany({
-    where: {
-      profileId: user.id,
-      paymentStatus: false,
-    },
-  });
-  let bookingId: null | string = null;
+  const user = await getOptionalAuthUser();
+  const { propertyId, checkIn, checkOut, roomType, guestInfo } = form;
 
-  const { propertyId, checkIn, checkOut } = prevState;
+  if (user?.id) {
+    await db.booking.deleteMany({
+      where: {
+        profileId: user.id,
+        paymentStatus: false,
+      },
+    });
+  }
+
   const property = await db.property.findUnique({
     where: { id: propertyId },
     select: { price: true },
   });
-  if (!property) {
-    return { message: 'Property not found' };
-  }
+  if (!property) return { message: 'Không tìm thấy chỗ ở' };
+
   const { orderTotal, totalNights } = calculateTotals({
     checkIn,
     checkOut,
     price: property.price,
+    roomType,
   });
 
   try {
-    const booking = await db.booking.create({
-      data: {
-        checkIn,
-        checkOut,
-        orderTotal,
-        totalNights,
-        profileId: user.id,
-        propertyId,
-      },
-    });
-    bookingId = booking.id;
+    let bookingId: string;
+
+    if (!user?.id && guestInfo) {
+      const guest = await db.guest.create({ data: guestInfo });
+
+      const booking = await db.booking.create({
+        data: {
+          checkIn,
+          checkOut,
+          orderTotal,
+          totalNights,
+          roomType,
+          guestId: guest.id,
+          propertyId,
+        },
+      });
+
+      bookingId = booking.id;
+    } else if (user?.id) {
+      const booking = await db.booking.create({
+        data: {
+          checkIn,
+          checkOut,
+          orderTotal,
+          totalNights,
+          roomType,
+          profileId: user.id,
+          propertyId,
+        },
+      });
+
+      bookingId = booking.id;
+    } else {
+      return { message: 'Thiếu thông tin người dùng' };
+    }
+
+return { message: "Đặt phòng thành công", redirectUrl: `/checkout?bookingId=${bookingId}` };
   } catch (error) {
     return renderError(error);
   }
-  redirect(`/checkout?bookingId=${bookingId}`);
 };
+
 
 
 
@@ -474,10 +551,18 @@ export async function deleteBookingAction(prevState: { bookingId: string }) {
 }
 
 export const fetchBookings = async () => {
-  const user = await getAuthUser();
+  const user = await getOptionalAuthUser();
+  const cookieStore = cookies();
+  const guestId = cookieStore.get('guestId')?.value;
+
+  if (!user?.id && !guestId) return [];
+
   const bookings = await db.booking.findMany({
     where: {
-      profileId: user.id,
+      OR: [
+        user?.id ? { profileId: user.id } : undefined,
+        guestId ? { guestId: guestId } : undefined,
+      ].filter(Boolean),
     },
     include: {
       property: {
@@ -489,12 +574,12 @@ export const fetchBookings = async () => {
       },
     },
     orderBy: {
-      checkIn: "desc",
+      checkIn: 'desc',
     },
   });
+
   return bookings;
 };
-
 export const fetchRentals = async () => {
   const user = await getAuthUser();
   const rentals = await db.property.findMany({

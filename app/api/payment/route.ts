@@ -2,11 +2,19 @@ import Stripe from 'stripe';
 import { type NextRequest, type NextResponse } from 'next/server';
 import db from '@/utils/db';
 import { formatDate } from '@/utils/format';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
 export const POST = async (req: NextRequest, res: NextResponse) => {
-  const requestHeaders = new Headers(req.headers);
-  const origin = requestHeaders.get('origin');
   const { bookingId } = await req.json();
+  console.log("b",bookingId);
+  
+  if (!bookingId) {
+    return Response.json(
+      { error: 'Missing bookingId' },
+      { status: 400 }
+    );
+  }
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
@@ -19,12 +27,17 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
       },
     },
   });
+
   if (!booking) {
-    return Response.json(null, {
-      status: 404,
-      statusText: 'Not Found',
-    });
+    return Response.json(
+      { error: 'Booking not found' },
+      { status: 404 }
+    );
   }
+
+  const requestHeaders = new Headers(req.headers);
+  const origin = requestHeaders.get('origin') ?? process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+
   const {
     totalNights,
     orderTotal,
@@ -36,7 +49,9 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   try {
     const session = await stripe.checkout.sessions.create({
       ui_mode: 'embedded',
-      metadata: { bookingId: booking.id },
+      metadata: { bookingId: booking.id,
+         guestId: booking.guestId ?? '',
+       },
       line_items: [
         {
           quantity: 1,
@@ -56,14 +71,13 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
       mode: 'payment',
       return_url: `${origin}/api/confirm?session_id={CHECKOUT_SESSION_ID}`,
     });
+
     return Response.json({ clientSecret: session.client_secret });
   } catch (error) {
-    console.log(error);
-    return Response.json(null, {
-      status: 500,
-      statusText: 'Internal Server Error',
-    });
+    console.error('Stripe error:', error);
+    return Response.json(
+      { error: 'Stripe session creation failed' },
+      { status: 500 }
+    );
   }
 };
-
-
