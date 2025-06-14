@@ -1,16 +1,17 @@
-import { findCountryByCode } from "@/utils/contries";
+import { findProvinceByCode } from "@/utils/vietnamProvinces";
 
 
-function CountryFlagAndName({ countryCode }: { countryCode: string }) {
-  const validCountry = findCountryByCode(countryCode);
-  const countryName =
-    validCountry!.name.length > 20
-      ? `${validCountry!.name.substring(0, 20)}...`
-      : validCountry!.name;
-  return (
-    <span className='flex justify-between items-center gap-2 text-sm '>
-      {validCountry?.flag} {countryName}
-    </span>
-  );
+function CountryNameOnly({ countryCode }: { countryCode: string }) {
+  if (!countryCode) {
+    return <span className="text-sm text-muted-foreground">Unknown</span>;
+  }
+
+  const name =
+    countryCode.length > 20
+      ? `${countryCode.substring(0, 20)}...`
+      : countryCode;
+
+  return <span className="text-sm">{name}</span>;
 }
-export default CountryFlagAndName;
+
+export default CountryNameOnly;

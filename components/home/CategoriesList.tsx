@@ -5,9 +5,11 @@ import Link from 'next/link';
 function CategoriesList({
   category,
   search,
+  location,
 }: {
   category?: string;
   search?: string;
+  location?:string;
 }) {
   const searchTerm = search ? `&search=${search}` : '';
   return (

@@ -9,7 +9,7 @@ function Navbar() {
         <Logo />
         <NavSearch />
         <div className='flex gap-4 items-center '>
-          <DarkMode />
+       
           <LinksDropdown />
         </div>
       </div>

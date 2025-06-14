@@ -80,15 +80,22 @@ model Review {
 
 model Booking {
   id            String   @id @default(uuid())
-  profile       Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId     String
+  profile       Profile? @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId     String?  // 👈 nullable để dùng guest nếu không có tài khoản
+
+  guest         Guest?   @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  guestId       String?  // 👈 thêm quan hệ với guest
+
   property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   propertyId    String
+
   orderTotal    Int
   totalNights   Int
   checkIn       DateTime
   checkOut      DateTime
   paymentStatus Boolean  @default(false)
+  roomType      RoomType @default(STANDARD)
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -117,4 +124,18 @@ model ViewHistory {
 
   @@index([profileId, viewedAt])
   @@unique([profileId, propertyId, viewedAt]) // tránh ghi trùng quá sát
+}
+enum RoomType {
+  STANDARD
+  VIP
+  PRESIDENT
+}
+model Guest {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String
+  phone     String
+  createdAt DateTime @default(now())
+
+  bookings  Booking[]
 }

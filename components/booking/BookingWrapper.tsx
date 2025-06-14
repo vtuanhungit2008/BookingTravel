@@ -6,6 +6,8 @@ import BookingCalendar from "./BookingCalendar";
 import BookingContainer from "./BookingContainer";
 import { useEffect } from "react";
 
+
+
 type BookingWrapperProps = {
   propertyId: string;
   price: number;
@@ -21,6 +23,7 @@ export default function BookingWrapper({
       propertyId,
       price,
       bookings,
+      roomType: "STANDARD",
     });
   }, []);
   return (

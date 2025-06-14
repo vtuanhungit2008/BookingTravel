@@ -11,11 +11,12 @@ const markerIcon = icon({
 
 import CountryFlagAndName from '../card/CountryFlagAndName';
 import Title from './Title';
-import { findCountryByCode } from '@/utils/contries';
+import { findProvinceByCode } from '@/utils/vietnamProvinces';
+
 
 function PropertyMap({ countryCode }: { countryCode: string }) {
   const defaultLocation = [51.505, -0.09] as [number, number];
-  const location = findCountryByCode(countryCode)?.location as [number, number];
+  const location = findProvinceByCode(countryCode)?.location as [number, number];
 
   return (
     <div className='mt-4'>

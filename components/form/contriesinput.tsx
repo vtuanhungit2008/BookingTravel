@@ -7,33 +7,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formattedCountries } from '@/utils/contries';
 
+import { vietnamProvinces } from '@/utils/vietnamProvinces';
 const name = 'country';
 function CountriesInput({ defaultValue }: { defaultValue?: string }) {
   return (
-    <div className='mb-2'>
+   <div className='mb-2'>
       <Label htmlFor={name} className='capitalize'>
-        country
+        Province / Tỉnh thành
       </Label>
       <Select
-        defaultValue={defaultValue || formattedCountries[0].code}
+        defaultValue={defaultValue || vietnamProvinces[0].code}
         name={name}
         required
       >
         <SelectTrigger id={name}>
-          <SelectValue />
+          <SelectValue placeholder="Chọn tỉnh thành" />
         </SelectTrigger>
         <SelectContent>
-          {formattedCountries.map((item) => {
-            return (
-              <SelectItem key={item.code} value={item.code}>
-                <span className='flex items-center gap-2'>
-                  {item.flag} {item.name}
-                </span>
-              </SelectItem>
-            );
-          })}
+          {vietnamProvinces.map((item) => (
+            <SelectItem key={item.code} value={item.code}>
+              {item.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

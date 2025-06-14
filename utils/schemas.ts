@@ -54,6 +54,7 @@ export const propertySchema = z.object({
     }
   ),
   country: z.string(),
+ 
   guests: z.coerce.number().int().min(0, {
     message: 'guest amount must be a positive number.',
   }),

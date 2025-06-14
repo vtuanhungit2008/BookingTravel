@@ -3,8 +3,10 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useProperty } from "@/utils/store";
 import { formatCurrency } from "@/utils/format";
+import RoomTypeSelector from "./RoomTypeSelector";
+
 function BookingForm() {
-  const { range, price } = useProperty((state) => state);
+  const { range, price, roomType } = useProperty((state) => state);
   const checkIn = range?.from as Date;
   const checkOut = range?.to as Date;
 
@@ -13,18 +15,25 @@ function BookingForm() {
       checkIn,
       checkOut,
       price,
+      roomType, // ✅ truyền roomType vào đây
     });
+
   return (
     <Card className="p-8 mb-4">
-      <CardTitle className="mb-8">Summary </CardTitle>
-      <FormRow label={`$${price} x ${totalNights} nights`} amount={subTotal} />
+      <CardTitle className="mb-8">Summary</CardTitle>
+      <FormRow
+        label={`$${price} x ${totalNights} nights (${roomType})`}
+        amount={subTotal}
+      />
       <FormRow label="Cleaning Fee" amount={cleaning} />
       <FormRow label="Service Fee" amount={service} />
       <FormRow label="Tax" amount={tax} />
+       <RoomTypeSelector/>
       <Separator className="mt-4" />
       <CardTitle className="mt-8">
         <FormRow label="Booking Total" amount={orderTotal} />
       </CardTitle>
+       
     </Card>
   );
 }
