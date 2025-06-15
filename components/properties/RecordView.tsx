@@ -1,15 +1,12 @@
 'use client';
 
-import { recordPropertyView } from '@/utils/test';
 import { useEffect } from 'react';
+import { recordPropertyView } from '@/utils/test';
 
-
-const RecordView = ({ propertyId }: { propertyId: string }) => {
+export default function RecordView({ propertyId }: { propertyId: string }) {
   useEffect(() => {
-    recordPropertyView(propertyId);
+    void recordPropertyView(propertyId); // Không chờ response
   }, [propertyId]);
 
   return null;
-};
-
-export default RecordView;
+}

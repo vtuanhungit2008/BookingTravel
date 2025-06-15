@@ -1,31 +1,39 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "../ui/button";
-import { Card } from "../ui/card";
-import FormContainer from "../form/formcontanier";
-import { createReviewAction } from "@/utils/action";
-import RatingInput from "../form/RatingInput";
-import TextAreaInput from "../form/textareainput";
-import { SubmitButton } from "../form/submitbtn";
+import { useState } from 'react';
+import { Button } from '../ui/button';
+import { Card } from '../ui/card';
+import FormContainer from '../form/formcontanier';
+import { createReviewAction } from '@/utils/action';
+import RatingInput from '../form/RatingInput';
+import TextAreaInput from '../form/textareainput';
+import { SubmitButton } from '../form/submitbtn';
 
-function SubmitReview({ propertyId }: { propertyId: string }) {
-  const [isReviewFormVisible, setIsReviewFormVisible] = useState(false);
+type Props = {
+  propertyId: string;
+  hasReviewed?: boolean; // Truyền từ server nếu có
+};
+
+export default function SubmitReview({ propertyId, hasReviewed }: Props) {
+  const [showForm, setShowForm] = useState(false);
+
+  if (hasReviewed) return null;
+
   return (
     <div className="mt-8">
-      <Button onClick={() => setIsReviewFormVisible((prev) => !prev)}>
+      <Button onClick={() => setShowForm((prev) => !prev)}>
         Leave a Review
       </Button>
-      {isReviewFormVisible && (
+
+      {showForm && (
         <Card className="p-8 mt-8">
           <FormContainer action={createReviewAction}>
             <input type="hidden" name="propertyId" value={propertyId} />
             <RatingInput name="rating" />
-
             <TextAreaInput
               name="comment"
-              labelText="your thoughts on this property"
-              defaultValue="Amazing place !!!"
+              labelText="Your thoughts on this property"
+              defaultValue=""
             />
             <SubmitButton text="Submit" className="mt-4" />
           </FormContainer>
@@ -34,5 +42,3 @@ function SubmitReview({ propertyId }: { propertyId: string }) {
     </div>
   );
 }
-
-export default SubmitReview;

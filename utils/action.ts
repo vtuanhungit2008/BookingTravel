@@ -438,22 +438,37 @@ export const findExistingReview = async (
 
 
 
-export const fetchPropertyDetails = (id: string) => {
-  return db.property.findUnique({
-    where: {
-      id,
-    },
+export const fetchPropertyDetails = async (id: string, userId?: string) => {
+  const property = await db.property.findUnique({
+    where: { id },
     include: {
       profile: true,
-      bookings: {
-        select: {
-          checkIn: true,
-          checkOut: true,
-        },
-      },
+      bookings: { select: { checkIn: true, checkOut: true } },
+      reviews: true,
+      favorites: userId
+        ? {
+            where: { profileId: userId },
+            select: { id: true },
+            take: 1,
+          }
+        : false,
     },
   });
+
+  if (!property) return null;
+
+  const totalRating = property.reviews.reduce((sum, r) => sum + r.rating, 0);
+  const reviewCount = property.reviews.length;
+  const averageRating = reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : null;
+
+  return {
+    ...property,
+    rating: averageRating,
+    reviewCount,
+    favoriteId: property.favorites?.[0]?.id ?? null,
+  };
 };
+
 export const getOptionalAuthUser = async () => {
   const user = await currentUser();
 
