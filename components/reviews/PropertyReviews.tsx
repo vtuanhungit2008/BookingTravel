@@ -11,7 +11,7 @@ export default async function PropertyReviews({ propertyId }: Props) {
   if (!reviews.length) return null;
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 mb-10">
       <Title text="Reviews" />
       <div className="grid md:grid-cols-2 gap-8 mt-4">
         {reviews.map((review) => {

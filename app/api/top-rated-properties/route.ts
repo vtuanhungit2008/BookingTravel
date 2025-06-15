@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     orderBy: {
       _avg: { rating: 'desc' }, // sắp xếp theo rating trung bình
     },
-    take: 3,
+    take: 5,
   });
 
   const propertyIds = ratings.map((r) => r.propertyId);

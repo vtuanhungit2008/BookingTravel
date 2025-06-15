@@ -1,10 +1,12 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { PropertyCardProps } from '@/utils/types';
-import { formatCurrency } from '@/utils/format';
-import PropertyRating from './PropertyRating';
-import FavoriteToggleButton from './FavoriteToggleButton';
-import CountryFlagAndName from './CountryFlagAndName';
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { PropertyCardProps } from '@/utils/types'
+import { formatCurrency } from '@/utils/format'
+import PropertyRating from './PropertyRating'
+import FavoriteToggleButton from './FavoriteToggleButton'
+import CountryFlagAndName from './CountryFlagAndName'
 
 export default function PropertyCard({ property }: { property: PropertyCardProps }) {
   const {
@@ -17,41 +19,48 @@ export default function PropertyCard({ property }: { property: PropertyCardProps
     favoriteId,
     rating,
     reviewCount,
-  } = property;
+  } = property
 
   return (
-    <article className="group relative">
+    <article className="group relative rounded-3xl overflow-hidden shadow hover:shadow-xl transition duration-300 bg-white">
       <Link href={`/properties/${id}`} className="block">
-        <div className="relative h-[300px] mb-2 overflow-hidden rounded-md">
+        {/* Image with hover zoom */}
+        <div className="relative h-[240px] md:h-[260px] lg:h-[220px] xl:h-[240px] overflow-hidden">
           <Image
             src={image}
             alt={name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw"
-            className="rounded-md object-cover transform group-hover:scale-110 transition-transform duration-500"
+            className="object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent p-3">
+            <h3 className="text-white text-base font-semibold truncate drop-shadow">{name}</h3>
+          </div>
         </div>
 
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-semibold mt-1 truncate">{name}</h3>
-          <PropertyRating inPage={false} rating={rating} count={reviewCount ?? 0} />
-        </div>
-
-        <p className="text-sm mt-1 text-muted-foreground truncate">
-          {tagline || 'Chưa có mô tả'}
-        </p>  
-
-        <div className="flex justify-between items-center mt-1">
-          <p className="text-sm">
-            <span className="font-semibold">{formatCurrency(price)}</span> / night
+        {/* Details */}
+        <div className="p-4 space-y-2">
+          <p className="text-sm text-gray-500 italic truncate">
+            {tagline || 'Không gian lý tưởng cho kỳ nghỉ của bạn'}
           </p>
-          <CountryFlagAndName countryCode={country} />
+
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-medium text-gray-800">
+              {formatCurrency(price)} <span className="text-gray-400 font-normal">/ đêm</span>
+            </span>
+            <CountryFlagAndName countryCode={country} />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <PropertyRating inPage={false} rating={rating} count={reviewCount ?? 0} />
+          </div>
         </div>
       </Link>
 
-      <div className="absolute top-5 right-5 z-10">
+      {/* Favorite Button */}
+      <div className="absolute top-3 right-3 z-10">
         <FavoriteToggleButton propertyId={id} initialFavoriteId={favoriteId ?? null} />
       </div>
     </article>
-  );
+  )
 }

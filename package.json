@@ -36,6 +36,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
+    "framer-motion": "^12.18.1",
+    "keen-slider": "^6.8.6",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.445.0",
     "neo4j-driver": "^5.28.1",
