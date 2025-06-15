@@ -1,11 +1,12 @@
+// app/page.tsx
+
 import CategoriesList from '@/components/home/CategoriesList';
-import { Suspense } from 'react';
-import LoadingCards from './loading';
-import PropertiesContainer from '@/components/home/PropertiesContainer';
 import LandingHero from '@/components/home/LandingHero';
 import Footer from '@/components/landingpage/Footer';
+import PropertiesContainer from '@/components/home/PropertiesContainer';
+import { fetchProperties } from '@/utils/action';
 
-function HomePage({
+export default async function HomePage({
   searchParams,
 }: {
   searchParams: {
@@ -19,6 +20,12 @@ function HomePage({
     !!searchParams?.search ||
     !!searchParams?.location;
 
+  const properties = await fetchProperties({
+    category: searchParams.category,
+    search: searchParams.search,
+    location: searchParams.location,
+  });
+
   return (
     <section className="w-full pb-8">
       {!hasSearch && <LandingHero />}
@@ -26,20 +33,12 @@ function HomePage({
       <CategoriesList
         category={searchParams?.category}
         search={searchParams?.search}
-        location={searchParams?.location} // 👈 nếu cần truyền location
+        location={searchParams?.location}
       />
 
-      <Suspense fallback={<LoadingCards />}>
-        <PropertiesContainer
-          category={searchParams?.category}
-          search={searchParams?.search}
-          location={searchParams?.location} // 👈 truyền location vào
-        />
-      </Suspense>
 
-      {/* <Footer /> */}
+      <PropertiesContainer properties={properties} />
+
     </section>
   );
 }
-
-export default HomePage;

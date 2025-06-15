@@ -13,15 +13,27 @@ export default function FavoriteToggleButton({
 
   useEffect(() => {
     const fetchFavorite = async () => {
-      const res = await fetch(`/api/favorite?propertyId=${propertyId}`);
-      const json = await res.json();
-      setFavoriteId(json.favoriteId);
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/favorite?propertyId=${propertyId}`);
+        const json = await res.json();
+        setFavoriteId(json.favoriteId || null);
+      } catch (err) {
+        console.error('Error fetching favorite:', err);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchFavorite();
   }, [propertyId]);
 
   if (loading) return null;
 
-  return <FavoriteToggleForm favoriteId={favoriteId} propertyId={propertyId} />;
+  return (
+    <FavoriteToggleForm
+      propertyId={propertyId}
+      favoriteId={favoriteId}
+      onChange={(newId) => setFavoriteId(newId)}
+    />
+  );
 }

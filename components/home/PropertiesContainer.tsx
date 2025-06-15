@@ -1,24 +1,25 @@
-import { fetchProperties } from "@/utils/action";
-import { PropertyCardProps } from "@/utils/types";
-import EmptyList from "./EmptyList";
-import PropertiesList from "./PropertiesList";
+// PropertiesContainer.tsx
+'use client';
 
-async function PropertiesContainer({
-  category,
-  search,
-  location,
+import { useEffect } from 'react';
+
+import { PropertyCardProps } from '@/utils/types';
+import PropertiesList from './PropertiesList';
+import EmptyList from './EmptyList';
+import { usePropertyStore } from '@/utils/store';
+
+export default function PropertiesContainer({
+  properties,
 }: {
-  category?: string;
-  search?: string;
-  location?: string;
+  properties: PropertyCardProps[];
 }) {
-  const properties: PropertyCardProps[] = await fetchProperties({
-    category,
-    search,
-    location, // 👈 Thêm dòng này để lọc theo địa điểm
-  });
+  const { setProperties, properties: stored } = usePropertyStore();
+  
+  useEffect(() => {
+    setProperties(properties);
+  }, [properties, setProperties]);
 
-  if (properties.length === 0) {
+  if (!stored || stored.length === 0) {
     return (
       <EmptyList
         heading="No results."
@@ -28,7 +29,5 @@ async function PropertiesContainer({
     );
   }
 
-  return <PropertiesList properties={properties} />;
+  return <PropertiesList properties={stored} />;
 }
-
-export default PropertiesContainer;

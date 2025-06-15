@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { PropertyState, TopProperty } from "./types";
+import { PropertyCardProps, PropertyState, TopProperty } from "./types";
 
 
 
@@ -18,4 +18,18 @@ export const useProperty = create<PropertyState>((set) => ({
   roomType: "STANDARD", // mặc định loại phòng thường
   setRoomType: (type) => set({ roomType: type }),
 }));
+
+
+type PropertyStore = {
+  properties: PropertyCardProps[];
+  setProperties: (data: PropertyCardProps[]) => void;
+  clearProperties: () => void;
+};
+
+export const usePropertyStore = create<PropertyStore>((set) => ({
+  properties: [],
+  setProperties: (data) => set({ properties: data }),
+  clearProperties: () => set({ properties: [] }),
+}));
+
 

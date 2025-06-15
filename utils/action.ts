@@ -261,31 +261,42 @@ export const fetchFavoriteId = async ({
 
 
 export const toggleFavoriteAction = async (
-  prevState: any,
+  _: any,
   formData: FormData
-) => {
+): Promise<{ favoriteId: string | null }> => {
   const { userId } = auth();
-  if (!userId) return;
+  if (!userId) {
+    console.warn('Unauthorized toggle favorite');
+    return { favoriteId: null };
+  }
 
   const propertyId = formData.get('propertyId') as string;
   const favoriteId = formData.get('favoriteId') as string;
 
-  let newFavoriteId: string | null = null;
-
-  if (favoriteId) {
-    await db.favorite.delete({ where: { id: favoriteId } });
-  } else {
-    const created = await db.favorite.create({
-      data: {
-        propertyId,
-        profileId: userId,
-      },
-    });
-    newFavoriteId = created.id;
+  if (!propertyId) {
+    console.warn('Missing propertyId');
+    return { favoriteId: null };
   }
 
-  return { favoriteId: newFavoriteId };
+  try {
+    if (favoriteId) {
+      await db.favorite.delete({ where: { id: favoriteId } });
+      return { favoriteId: null };
+    } else {
+      const created = await db.favorite.create({
+        data: {
+          profileId: userId,
+          propertyId,
+        },
+      });
+      return { favoriteId: created.id };
+    }
+  } catch (error) {
+    console.error('toggleFavoriteAction error:', error);
+    return { favoriteId: null };
+  }
 };
+
 export const fetchFavorites = async () => {
   const user = await getAuthUser();
   const favorites = await db.favorite.findMany({
