@@ -188,8 +188,7 @@ export const createPropertyAction = async (
   redirect("/");
 };
 
-
-export const fetchProperties = cache(async ({
+export const fetchProperties = async ({
   search = '',
   category,
   location,
@@ -198,6 +197,8 @@ export const fetchProperties = cache(async ({
   category?: string;
   location?: string;
 }) => {
+  const { userId } = auth(); // 👈 đây là Clerk ID (clerkId)
+
   const properties = await db.property.findMany({
     where: {
       AND: [
@@ -212,34 +213,47 @@ export const fetchProperties = cache(async ({
           : {},
         {
           OR: [
-            {
-              name: {
-                contains: search,
-                mode: 'insensitive',
-              },
-            },
-            {
-              tagline: {
-                contains: search,
-                mode: 'insensitive',
-              },
-            },
+            { name: { contains: search, mode: 'insensitive' } },
+            { tagline: { contains: search, mode: 'insensitive' } },
           ],
         },
       ],
     },
-    select: {
-      id: true,
-      name: true,
-      tagline: true,
-      country: true,
-      image: true,
-      price: true,
+    include: {
+      reviews: { select: { rating: true } },
+      favorites: userId
+        ? {
+            where: {
+              profileId: userId, // 👈 phải là clerkId (khớp với Favorite.profileId)
+            },
+            select: { id: true },
+            take: 1,
+          }
+        : false,
     },
   });
 
-  return properties;
-});
+  return properties.map((p) => {
+    const ratings = p.reviews.map((r) => r.rating);
+    const average =
+      ratings.length > 0
+        ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+        : null;
+
+    return {
+      id: p.id,
+      name: p.name,
+      image: p.image,
+      price: p.price,
+      country: p.country,
+      tagline: p.tagline,
+      favoriteId: p.favorites?.[0]?.id ?? null, // 👈 chuẩn
+      rating: average,
+      reviewCount: ratings.length,
+    };
+  });
+};
+
 
 export const fetchFavoriteId = async ({
   propertyId,
@@ -270,8 +284,8 @@ export const toggleFavoriteAction = async (
     return { favoriteId: null };
   }
 
-  const propertyId = formData.get('propertyId') as string;
-  const favoriteId = formData.get('favoriteId') as string;
+  const propertyId = formData.get('propertyId') as string | null;
+  const favoriteId = formData.get('favoriteId') as string | null;
 
   if (!propertyId) {
     console.warn('Missing propertyId');
@@ -279,31 +293,33 @@ export const toggleFavoriteAction = async (
   }
 
   try {
-    if (favoriteId) {
+    if (favoriteId && favoriteId.trim() !== '') {
+      // 👈 chỉ xóa nếu có ID hợp lệ
       await db.favorite.delete({ where: { id: favoriteId } });
       return { favoriteId: null };
-    } else {
-      const created = await db.favorite.create({
-        data: {
-          profileId: userId,
-          propertyId,
-        },
-      });
-      return { favoriteId: created.id };
     }
+
+    const created = await db.favorite.create({
+      data: {
+        profileId: userId,
+        propertyId,
+      },
+    });
+    return { favoriteId: created.id };
   } catch (error) {
     console.error('toggleFavoriteAction error:', error);
     return { favoriteId: null };
   }
 };
 
+
+
 export const fetchFavorites = async () => {
-  const user = await getAuthUser();
+  const user = await getAuthUser(); // đảm bảo trả về user có id là Clerk ID
+
   const favorites = await db.favorite.findMany({
-    where: {
-      profileId: user.id,
-    },
-    select: {
+    where: { profileId: user.id },
+    include: {
       property: {
         select: {
           id: true,
@@ -312,12 +328,28 @@ export const fetchFavorites = async () => {
           price: true,
           country: true,
           image: true,
+          reviews: { select: { rating: true } },
         },
       },
     },
   });
-  return favorites.map((favorite) => favorite.property);
+
+  return favorites.map((favorite) => {
+    const ratings = favorite.property.reviews.map((r) => r.rating);
+    const average =
+      ratings.length > 0
+        ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+        : null;
+
+    return {
+      ...favorite.property,
+      favoriteId: favorite.id, // dùng để toggle yêu thích
+      rating: average,
+      reviewCount: ratings.length,
+    };
+  });
 };
+
 
 
 export async function fetchPropertyRating(propertyId: string) {
@@ -438,13 +470,19 @@ export const findExistingReview = async (
 
 
 
-export const fetchPropertyDetails = async (id: string, userId?: string) => {
+export const fetchPropertyDetails = async (propertyId: string) => {
+  const { userId } = auth();
+
   const property = await db.property.findUnique({
-    where: { id },
+    where: { id: propertyId },
     include: {
       profile: true,
-      bookings: { select: { checkIn: true, checkOut: true } },
-      reviews: true,
+      bookings: true,
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
       favorites: userId
         ? {
             where: { profileId: userId },
@@ -457,14 +495,15 @@ export const fetchPropertyDetails = async (id: string, userId?: string) => {
 
   if (!property) return null;
 
-  const totalRating = property.reviews.reduce((sum, r) => sum + r.rating, 0);
-  const reviewCount = property.reviews.length;
-  const averageRating = reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : null;
+  const ratings = property.reviews.map((r) => r.rating);
+  const averageRating = ratings.length > 0
+    ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
+    : null;
 
   return {
     ...property,
-    rating: averageRating,
-    reviewCount,
+    rating: averageRating,      // ✅ Đảm bảo là số, không phải string
+    reviewCount: ratings.length,
     favoriteId: property.favorites?.[0]?.id ?? null,
   };
 };

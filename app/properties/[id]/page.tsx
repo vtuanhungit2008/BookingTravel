@@ -58,7 +58,7 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
         <div className='flex items-center gap-x-4'>
           {/* share button */}
           <ShareButton name={property.name} propertyId={property.id} />
-          <FavoriteToggleButton propertyId={property.id} />
+          <FavoriteToggleButton  initialFavoriteId={property.favoriteId} propertyId={property.id} />
         </div>
       </header>
       <ImageContainer mainImage={property.image} name={property.name} />
@@ -66,8 +66,7 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
         <div className='lg:col-span-8'>
           <div className='flex gap-x-4 items-center'>
             <h1 className='text-xl font-bold'>{property.name} </h1>
-            <PropertyRating inPage rating={property.rating}
-    count={property.reviewCount} />
+        <PropertyRating inPage rating={property.rating} count={property.reviewCount} />
           </div>
           <PropertyDetails details={details} />
           <UserInfo profile={{ firstName, profileImage }} />

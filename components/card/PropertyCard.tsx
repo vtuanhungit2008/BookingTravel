@@ -7,7 +7,17 @@ import FavoriteToggleButton from './FavoriteToggleButton';
 import CountryFlagAndName from './CountryFlagAndName';
 
 export default function PropertyCard({ property }: { property: PropertyCardProps }) {
-  const { id, name, image, price, tagline, country } = property;
+  const {
+    id,
+    name,
+    image,
+    price,
+    tagline,
+    country,
+    favoriteId,
+    rating,
+    reviewCount,
+  } = property;
 
   return (
     <article className="group relative">
@@ -24,12 +34,12 @@ export default function PropertyCard({ property }: { property: PropertyCardProps
 
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-semibold mt-1 truncate">{name}</h3>
-          <PropertyRating inPage={false} propertyId={id} />
+          <PropertyRating inPage={false} rating={rating} count={reviewCount ?? 0} />
         </div>
 
         <p className="text-sm mt-1 text-muted-foreground truncate">
           {tagline || 'Chưa có mô tả'}
-        </p>
+        </p>  
 
         <div className="flex justify-between items-center mt-1">
           <p className="text-sm">
@@ -40,7 +50,7 @@ export default function PropertyCard({ property }: { property: PropertyCardProps
       </Link>
 
       <div className="absolute top-5 right-5 z-10">
-        <FavoriteToggleButton propertyId={id} />
+        <FavoriteToggleButton propertyId={id} initialFavoriteId={favoriteId ?? null} />
       </div>
     </article>
   );

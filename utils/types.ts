@@ -7,13 +7,16 @@ export type actionFunction = (
   ) => Promise<{ message: string }>;
 
 export type PropertyCardProps = {
-    image: string;
-    id: string;
-    name: string;
-    tagline: string;
-    country: string;
-    price: number;
-  };
+  id: string;
+  name: string;
+  image: string;
+  tagline: string;
+  country: string;
+  price: number;
+  favoriteId?: string | null;
+  rating?: string | null;
+  reviewCount?: number;
+};
 export  interface Message {
   id: number;
   username: string;
