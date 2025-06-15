@@ -13,11 +13,11 @@ type TopProperty = {
 };
 
 const SkeletonCard = () => (
-  <div className="bg-gray-100 animate-pulse rounded-2xl p-4 shadow-md text-left">
-    <div className="h-48 w-full bg-gray-300 rounded-md mb-3" />
-    <div className="h-5 w-3/4 bg-gray-300 rounded mb-2" />
-    <div className="h-4 w-1/2 bg-gray-200 rounded mb-1" />
-    <div className="h-4 w-1/3 bg-gray-200 rounded" />
+  <div className="bg-white animate-pulse rounded-2xl p-4 shadow-sm text-left">
+    <div className="h-48 w-full bg-gray-200 rounded-lg mb-3" />
+    <div className="h-5 w-3/4 bg-gray-200 rounded mb-2" />
+    <div className="h-4 w-1/2 bg-gray-100 rounded mb-1" />
+    <div className="h-4 w-1/3 bg-gray-100 rounded" />
   </div>
 );
 
@@ -34,15 +34,18 @@ export default function Features() {
   }, []);
 
   return (
-    <section className="py-20 bg-white min-h-[88vh]">
+    <section className=" bg-white min-h-[88vh]">
       <div className="max-w-5xl pt-12 mt-5 mx-auto text-center">
-        <h2 className="text-4xl font-bold mb-10">Top khách sạn được yêu thích</h2>
+        <h2 className="text-4xl font-bold mb-10 text-gray-800">Top khách sạn được yêu thích</h2>
 
         <div className="grid md:grid-cols-3 gap-8">
           {properties
             ? properties.map((hotel) => (
-                <div key={hotel.id} className="bg-white rounded-2xl p-4 shadow-md text-left">
-                  <div className="relative h-48 w-full rounded-md overflow-hidden mb-3">
+                <div
+                  key={hotel.id}
+                  className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-left"
+                >
+                  <div className="relative h-48 w-full rounded-lg overflow-hidden mb-3">
                     <Image
                       src={hotel.image}
                       alt={hotel.name}
@@ -50,9 +53,9 @@ export default function Features() {
                       className="object-cover"
                     />
                   </div>
-                  <h3 className="text-lg font-semibold">{hotel.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{hotel.name}</h3>
                   <p className="text-gray-500 text-sm mb-2">{hotel.tagline}</p>
-                  <p className="text-sm">
+                  <p className="text-sm text-yellow-600 font-medium">
                     ⭐ {hotel.rating} / 5 ({hotel.reviewCount} đánh giá)
                   </p>
                 </div>
