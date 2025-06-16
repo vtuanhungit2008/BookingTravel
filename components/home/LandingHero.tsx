@@ -14,15 +14,10 @@ export default function LandingHero() {
   return (
     <section>
     <HeroSlider/>
-      <DestinationGrid/>
+    <DestinationGrid/>
     <Features/>
-
     <RoomCategories/>
-       <VisualSearch/>
-   
-    
-    
-  
+    <VisualSearch/>
     </section>
   )
 }

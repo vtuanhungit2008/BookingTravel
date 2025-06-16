@@ -8,6 +8,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum RoomType {
+  STANDARD
+  VIP
+  PRESIDENT
+}
+
+enum VoucherType {
+  FIXED
+  PERCENT
+}
+
 model Profile {
   id                   String                @id @default(uuid())
   clerkId              String                @unique
@@ -16,6 +27,7 @@ model Profile {
   username             String
   email                String
   profileImage         String
+  loyaltyPoints        Int                   @default(0)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
@@ -24,7 +36,17 @@ model Profile {
   reviews              Review[]
   bookings             Booking[]
   savedRecommendations SavedRecommendation[]
-  viewHistories        ViewHistory[]         // 👈 Quan hệ ngược từ ViewHistory
+  viewHistories        ViewHistory[]
+}
+
+model Guest {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String
+  phone     String
+  createdAt DateTime @default(now())
+
+  bookings  Booking[]
 }
 
 model Property {
@@ -51,16 +73,16 @@ model Property {
   reviews              Review[]
   bookings             Booking[]
   savedRecommendations SavedRecommendation[]
-  viewHistories        ViewHistory[]         // 👈 Quan hệ ngược từ ViewHistory
+  viewHistories        ViewHistory[]
 }
 
 model Favorite {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  profile   Profile @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId String
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId  String
 
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   propertyId String
@@ -78,39 +100,54 @@ model Review {
   updatedAt  DateTime @updatedAt
 }
 
+model Voucher {
+  id         String      @id @default(uuid())
+  code       String      @unique
+  discount   Int
+  type       VoucherType @default(FIXED)
+  expiresAt  DateTime
+  createdAt  DateTime    @default(now())
+
+  usedBy     Booking[]
+}
+
 model Booking {
-  id            String   @id @default(uuid())
-  profile       Profile? @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId     String?  // 👈 nullable để dùng guest nếu không có tài khoản
+  id            String     @id @default(uuid())
+  profile       Profile?   @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId     String?
+discount      Int        @default(0)          // 🆕 Số tiền giảm
+  finalPaid     Int?  
+  guest         Guest?     @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  guestId       String?
 
-  guest         Guest?   @relation(fields: [guestId], references: [id], onDelete: Cascade)
-  guestId       String?  // 👈 thêm quan hệ với guest
-
-  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property      Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   propertyId    String
+
+  voucher       Voucher?   @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  voucherId     String?
 
   orderTotal    Int
   totalNights   Int
   checkIn       DateTime
   checkOut      DateTime
-  paymentStatus Boolean  @default(false)
-  roomType      RoomType @default(STANDARD)
+  paymentStatus Boolean    @default(false)
+  roomType      RoomType   @default(STANDARD)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 model SavedRecommendation {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
 
-  profile   Profile @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId String
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId  String
 
-  property  Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   propertyId String
 
-  @@unique([profileId, propertyId]) // Không cho lưu trùng gợi ý
+  @@unique([profileId, propertyId])
 }
 
 model ViewHistory {
@@ -119,23 +156,9 @@ model ViewHistory {
   propertyId String
   viewedAt   DateTime @default(now())
 
-  profile   Profile   @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  property  Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([profileId, viewedAt])
-  @@unique([profileId, propertyId, viewedAt]) // tránh ghi trùng quá sát
-}
-enum RoomType {
-  STANDARD
-  VIP
-  PRESIDENT
-}
-model Guest {
-  id        String   @id @default(uuid())
-  fullName  String
-  email     String
-  phone     String
-  createdAt DateTime @default(now())
-
-  bookings  Booking[]
+  @@unique([profileId, propertyId, viewedAt])
 }

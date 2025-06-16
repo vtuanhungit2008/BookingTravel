@@ -24,25 +24,39 @@ export const GET = async (req: NextRequest) => {
       throw new Error('Invalid session');
     }
 
+    // 👉 Lấy thông tin từ session.metadata và Stripe
+    const discount = parseInt(session.metadata?.discount || '0', 10);
+    const voucherCode = session.metadata?.voucherCode || null;
+    const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+
+    // 👉 Cập nhật thông tin thanh toán vào DB
     const booking = await db.booking.update({
       where: { id: bookingId },
-      data: { paymentStatus: true },
+      data: {
+        paymentStatus: true,
+        discount: discount || 0,
+        finalPaid: amountPaid,
+        voucher: voucherCode
+          ? {
+              connect: { code: voucherCode },
+            }
+          : undefined,
+      },
       include: {
         guest: true,
         property: true,
       },
     });
 
-    const response = NextResponse.redirect(new URL('/bookings', req.url));
-
-    // Gửi email nếu là guest
+    // 👉 Lưu guestId vào cookie
     if (booking.guestId && booking.guest?.email) {
       cookies().set('guestId', booking.guestId, {
         path: '/',
         httpOnly: false,
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: 60 * 60 * 24 * 7, // 7 ngày
       });
 
+      // 👉 Gửi email xác nhận
       try {
         await resend.emails.send({
           from: 'Booking App <onboarding@resend.dev>',
@@ -54,19 +68,21 @@ export const GET = async (req: NextRequest) => {
             <ul>
               <li><strong>Ngày nhận phòng:</strong> ${formatDate(booking.checkIn)}</li>
               <li><strong>Ngày trả phòng:</strong> ${formatDate(booking.checkOut)}</li>
-              <li><strong>Tổng tiền:</strong> $${booking.orderTotal}</li>
+              <li><strong>Tổng tiền đã thanh toán:</strong> $${amountPaid.toFixed(2)}</li>
+              ${voucherCode ? `<li><strong>Mã giảm giá:</strong> ${voucherCode}</li>` : ''}
             </ul>
             <p>Cảm ơn bạn đã tin tưởng chúng tôi!</p>
           `,
         });
       } catch (emailError) {
-        console.error('Lỗi gửi email:', emailError);
+        console.error('[EMAIL_SEND_ERROR]', emailError);
       }
     }
 
-    return response;
+    // 👉 Redirect về trang lịch sử đặt phòng
+    return NextResponse.redirect(new URL('/bookings', req.url));
   } catch (error) {
-    console.error('Error confirming payment:', error);
+    console.error('[CONFIRM_ERROR]', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 };
