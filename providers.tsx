@@ -8,8 +8,7 @@ function Providers({ children }: { children: React.ReactNode }) {
       <Toaster />
       <ThemeProvider
         attribute='class'
-        defaultTheme='system'
-        enableSystem
+        defaultTheme='light'
         disableTransitionOnChange
       >
         {children}
