@@ -167,32 +167,39 @@ export default function VisualSearch() {
               }`}
             >
               <h2 className="text-3xl font-bold text-center mb-6">Phòng đề xuất</h2>
-              <div className="grid md:grid-cols-3 gap-6">
-                {results.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white rounded-2xl shadow-md overflow-hidden"
-                  >
-                    <img
-                      src={extractImageUrl(item)}
-                      alt={extractName(item)}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-4 text-left">
-                      <h3 className="text-xl font-semibold mb-1">{extractName(item)}</h3>
-                      <p className="text-gray-500 text-sm mb-1">{extractCountry(item)}</p>
-                      <p className="text-gray-700 text-sm">{extractPrice(item)}</p>
-                      <p className="text-gray-700 text-sm mb-2">{extractGuests(item)}</p>
-                      <a
-                        href={extractDetailLink(item)}
-                        className="inline-block mt-2 text-sm font-medium text-white bg-black px-4 py-2 rounded hover:bg-gray-800 transition"
-                      >
-                        Xem chi tiết
-                      </a>
+
+              {results[0].startsWith('🙁') ? (
+                <p className="text-center text-gray-500 text-lg">{results[0]}</p>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-6">
+                  {results.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-2xl shadow-md overflow-hidden"
+                    >
+                      <img
+                        src={extractImageUrl(item)}
+                        alt={extractName(item)}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="p-4 text-left">
+                        <h3 className="text-xl font-semibold mb-1">{extractName(item)}</h3>
+                        <p className="text-gray-500 text-sm mb-1">
+                          {extractCountry(item)}
+                        </p>
+                        <p className="text-gray-700 text-sm">{extractPrice(item)}</p>
+                        <p className="text-gray-700 text-sm mb-2">{extractGuests(item)}</p>
+                        <a
+                          href={extractDetailLink(item)}
+                          className="inline-block mt-2 text-sm font-medium text-white bg-black px-4 py-2 rounded hover:bg-gray-800 transition"
+                        >
+                          Xem chi tiết
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
