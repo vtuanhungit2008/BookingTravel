@@ -6,17 +6,17 @@ import { useEffect } from 'react';
 
 const slides = [
   {
-    image: '/image1.jpeg',
+    image: '/images/city/danang.jpg',
     title: 'Khám phá Khách sạn Mơ Ước',
     subtitle: 'Tìm nơi nghỉ lý tưởng cho kỳ nghỉ tiếp theo của bạn.',
   },
   {
-    image: '/image1.jpeg',
+    image: '/images/city/hcm.jpeg',
     title: 'Tận hưởng view biển',
     subtitle: 'Phòng nghỉ sát biển, đón bình minh từ ban công.',
   },
   {
-    image: '/image1.jpeg',
+    image: '/images/city/nhatrang.jpg',
     title: 'Thư giãn cùng hồ bơi vô cực',
     subtitle: 'Chìm đắm trong không gian sang trọng và hiện đại.',
   },
@@ -25,11 +25,9 @@ const slides = [
 export default function HeroSlider() {
   const [sliderRef, instanceRef] = useKeenSlider({
     loop: true,
-    slideChanged(s) {},
-    created() {},
-    autoplay: true,
   });
 
+  // ✅ Tự động chuyển slide mỗi 5 giây
   useEffect(() => {
     const timer = setInterval(() => {
       instanceRef.current?.next();

@@ -9,63 +9,64 @@ type Message = {
 };
 
 export default function AssistantChat() {
-  const handlePayNow = async (bookingId: string) => {
-  try {
-    const res = await fetch('/api/payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookingId }),
-    });
-
-    const { clientSecret } = await res.json();
-    if (clientSecret) {
-      window.location.href = `/checkout/${clientSecret}`;
-    } else {
-      alert('Không tạo được session thanh toán');
-    }
-  } catch (err) {
-    console.error('Thanh toán lỗi:', err);
-    alert('Lỗi khi bắt đầu thanh toán');
-  }
-};
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [recording, setRecording] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-const [recording, setRecording] = useState(false);
-const startVoiceInput = () => {
-  const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-  if (!SpeechRecognition) {
-    alert('Trình duyệt của bạn không hỗ trợ ghi âm');
-    return;
-  }
 
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'vi-VN';
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  const handlePayNow = async (bookingId: string) => {
+    try {
+      const res = await fetch('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      });
 
-  recognition.onstart = () => setRecording(true);
-
-  recognition.onend = () => setRecording(false);
-
-  recognition.onresult = (event: any) => {
-    const transcript = event.results[0][0].transcript;
-    setInput(transcript); // đưa nội dung vào ô input
+      const { clientSecret } = await res.json();
+      if (clientSecret) {
+        window.location.href = `/checkout/${clientSecret}`;
+      } else {
+        alert('Không tạo được session thanh toán');
+      }
+    } catch (err) {
+      console.error('Thanh toán lỗi:', err);
+      alert('Lỗi khi bắt đầu thanh toán');
+    }
   };
 
-  recognition.onerror = (event: any) => {
-    console.error('Lỗi khi ghi âm:', event.error);
-    setRecording(false);
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Trình duyệt của bạn không hỗ trợ ghi âm');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'vi-VN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setRecording(true);
+    recognition.onend = () => setRecording(false);
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Lỗi khi ghi âm:', event.error);
+      setRecording(false);
+    };
+
+    recognition.start();
   };
 
-  recognition.start();
-};
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const newMessages = [...messages, { role: 'user', text: input }];
+    const newMessages: Message[] = [...messages, { role: 'user', text: input }];
     setMessages(newMessages);
     setInput('');
     setLoading(true);
@@ -78,7 +79,6 @@ const startVoiceInput = () => {
       });
 
       const data = await res.json();
-
       setMessages([
         ...newMessages,
         { role: 'assistant', text: data.reply || 'Không có phản hồi' },
@@ -113,38 +113,37 @@ const startVoiceInput = () => {
                   : 'bg-white text-gray-800 rounded-bl-none mr-auto'
               }`}
             >
-     <ReactMarkdown
-  components={{
-    a: ({ href, children }) => {
-      const isPaymentLink = href?.startsWith('#pay:');
-      if (isPaymentLink) {
-        const bookingId = href.replace('#pay:', '');
-
-        return (
-          <button
-            className="text-green-600 underline hover:text-green-800"
-            onClick={() => handlePayNow(bookingId)}
-          >
-            {children}
-          </button>
-        );
-      }
-
-      return (
-        <a
-          href={href}
-          className="text-blue-600 underline hover:text-blue-800"
-          target="_blank"
-        >
-          {children}
-        </a>
-      );
-    },
-  }}
->
-  {msg.text}
-</ReactMarkdown>
-
+              <ReactMarkdown
+                components={{
+                  a: ({ href, children }) => {
+                    if (!href) return <>{children}</>;
+                    const isPayLink = href.startsWith('#pay:');
+                    if (isPayLink) {
+                      const bookingId = href.replace('#pay:', '');
+                      return (
+                        <button
+                          className="text-green-600 underline hover:text-green-800"
+                          onClick={() => handlePayNow(bookingId)}
+                        >
+                          {children}
+                        </button>
+                      );
+                    }
+                    return (
+                      <a
+                        href={href}
+                        className="text-blue-600 underline hover:text-blue-800"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {children}
+                      </a>
+                    );
+                  },
+                }}
+              >
+                {msg.text}
+              </ReactMarkdown>
             </div>
           </div>
         ))}
@@ -155,30 +154,32 @@ const startVoiceInput = () => {
       </div>
 
       <div className="p-3 border-t bg-white flex items-center gap-2">
-  <input
-    value={input}
-    onChange={(e) => setInput(e.target.value)}
-    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-    className="flex-1 border  border-gray-300 rounded-full px-0.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
-    placeholder="Nhập câu hỏi hoặc nhấn để nói..."
-  />
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          className="flex-1 border border-gray-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+          placeholder="Nhập câu hỏi hoặc nhấn để nói..."
+        />
 
-  <button
-    onClick={startVoiceInput}
-    className={`px-3 py-2 rounded-full text-sm border ${recording ? 'bg-red-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-    title="Nhấn để nói"
-  >
-    🎤
-  </button>
+        <button
+          onClick={startVoiceInput}
+          className={`px-3 py-2 rounded-full text-sm border ${
+            recording ? 'bg-red-500 text-white' : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+          title="Nhấn để nói"
+        >
+          🎤
+        </button>
 
-  <button
-    onClick={sendMessage}
-    disabled={loading}
-    className="bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-red transition"
-  >
-    Gửi
-  </button>
-</div>
+        <button
+          onClick={sendMessage}
+          disabled={loading}
+          className="bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-red-600 transition"
+        >
+          Gửi
+        </button>
+      </div>
     </div>
   );
 }

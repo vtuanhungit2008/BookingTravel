@@ -15,6 +15,7 @@ type ImageInputContainerProps = {
   action: actionFunction;
   text: string;
   children?: React.ReactNode;
+  className?: string; // <-- thêm dòng này
 };
 
 function ImageInputContainer(props: ImageInputContainerProps) {

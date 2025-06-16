@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ProfileTable } from "./ProfileTable";
+
 import { UserTable } from "./UserTable";
 import { PropertyTable } from "./PropertyTable";
 import { ReviewTable } from "./ReviewTable";

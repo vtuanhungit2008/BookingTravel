@@ -6,12 +6,13 @@ import { redirect } from 'next/navigation';
 
 import { supabase, uploadImage } from './supabase';
 import { createReviewSchema, imageSchema, profileSchema, propertySchema, searchAI, validateWithZodSchema } from './schemas';
-import { Message } from './types';
+import { BookingWithProperty, Message } from './types';
 import { calculateTotals } from './calculateTotals';
 import { formatDate } from './format';
 import { findProvinceByCode } from './vietnamProvinces';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
+import { Prisma } from '@prisma/client';
 
 const renderError = (error: unknown): { message: string } => {
   console.log(error);
@@ -614,20 +615,21 @@ export async function deleteBookingAction(prevState: { bookingId: string }) {
     return renderError(error);
   }
 }
-
-export const fetchBookings = async () => {
+export const fetchBookings = async (): Promise<BookingWithProperty[]> => {
   const user = await getOptionalAuthUser();
   const cookieStore = cookies();
   const guestId = cookieStore.get('guestId')?.value;
 
   if (!user?.id && !guestId) return [];
 
+  const filters = [
+    user?.id ? { profileId: user.id } : undefined,
+    guestId ? { guestId } : undefined,
+  ].filter(Boolean) as Prisma.BookingWhereInput[];
+
   const bookings = await db.booking.findMany({
     where: {
-      OR: [
-        user?.id ? { profileId: user.id } : undefined,
-        guestId ? { guestId: guestId } : undefined,
-      ].filter(Boolean),
+      OR: filters,
     },
     include: {
       property: {
@@ -643,7 +645,7 @@ export const fetchBookings = async () => {
     },
   });
 
-  return bookings;
+  return bookings as BookingWithProperty[];
 };
 export const fetchRentals = async () => {
   const user = await getAuthUser();

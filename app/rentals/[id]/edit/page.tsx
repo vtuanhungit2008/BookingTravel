@@ -1,3 +1,5 @@
+'use client';
+
 import AmenitiesInput from "@/components/form/amenitiesinput";
 import CategoriesInput from "@/components/form/categories";
 import CountriesInput from "@/components/form/contriesinput";
@@ -21,46 +23,51 @@ export default async function EditRentalPage({ params }: { params: { id: string 
 
   if (!property) redirect("/");
 
-  const defaultAmenities: Amenity[] = JSON.parse(property.amenities);
+  let defaultAmenities: Amenity[] = [];
+  try {
+    defaultAmenities = JSON.parse(property.amenities ?? "[]");
+  } catch (error) {
+    console.warn("Lỗi phân tích amenities:", error);
+  }
 
   return (
     <section className="min-h-screen px-4 py-12 bg-gray-50">
       <div className="max-w-5xl mx-auto bg-white p-8 md:p-10 rounded-2xl shadow-md space-y-12">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800">Edit Property</h1>
-          <p className="text-gray-500 mt-1">Update your listing details</p>
+          <h1 className="text-3xl font-bold text-gray-800">Chỉnh sửa địa điểm</h1>
+          <p className="text-gray-500 mt-1">Cập nhật chi tiết địa điểm của bạn</p>
         </div>
 
-        {/* Ảnh đại diện */}
+        {/* Image Upload */}
         <ImageInputContainer
           name={property.name}
-          text="Update Image"
+          text="Cập nhật ảnh"
           action={updatePropertyImageAction}
           image={property.image}
-           className="h-40 w-40 rounded-xl object-cover border shadow"
+          className="h-40 w-40 rounded-xl object-cover border shadow"
         >
           <input type="hidden" name="id" value={property.id} />
         </ImageInputContainer>
 
-        {/* Form chỉnh sửa */}
+        {/* Main Form */}
         <FormContainer action={updatePropertyAction}>
           <input type="hidden" name="id" value={property.id} />
 
           {/* General Info */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-700">📝 General Info</h2>
+            <h2 className="text-xl font-semibold text-gray-700">📝 Thông tin chung</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <FormInput
                 name="name"
                 type="text"
-                label="Name (max 20 characters)"
+                label="Tên địa điểm (tối đa 20 ký tự)"
                 defaultValue={property.name}
               />
               <FormInput
                 name="tagline"
                 type="text"
-                label="Tagline (max 30 characters)"
+                label="Mô tả ngắn (tối đa 30 ký tự)"
                 defaultValue={property.tagline}
               />
               <PriceInput defaultValue={property.price} />
@@ -71,17 +78,17 @@ export default async function EditRentalPage({ params }: { params: { id: string 
 
           {/* Description */}
           <div className="mt-10">
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">📖 Description</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">📖 Mô tả</h2>
             <TextAreaInput
               name="description"
-              labelText="Description (10 - 100 words)"
+              labelText="Mô tả (tối thiểu 10 từ, tối đa 100 từ)"
               defaultValue={property.description}
             />
           </div>
 
-          {/* Accommodation Details */}
+          {/* Accommodation */}
           <div className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">🏠 Accommodation</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">🏠 Chi tiết chỗ ở</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <CounterInput detail="guests" defaultValue={property.guests} />
               <CounterInput detail="bedrooms" defaultValue={property.bedrooms} />
@@ -92,11 +99,12 @@ export default async function EditRentalPage({ params }: { params: { id: string 
 
           {/* Amenities */}
           <div className="mt-10">
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">✨ Amenities</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">✨ Tiện nghi</h2>
             <AmenitiesInput defaultValue={defaultAmenities} />
           </div>
 
-          <SubmitButton text="Update Property" className="mt-12 w-full" />
+          {/* Submit */}
+          <SubmitButton text="Cập nhật địa điểm" className="mt-12 w-full" />
         </FormContainer>
       </div>
     </section>

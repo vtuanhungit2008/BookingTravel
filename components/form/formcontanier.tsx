@@ -8,7 +8,7 @@ import { actionFunction } from '@/utils/types';
 
 const initialState = {
   message: '',
-  redirectUrl: '', // 👈 thêm redirect hỗ trợ
+  redirectUrl: '',
 };
 
 function FormContainer({

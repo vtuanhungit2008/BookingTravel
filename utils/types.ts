@@ -1,10 +1,6 @@
-import { RoomType } from "@prisma/client";
+
 import { DateRange } from "react-day-picker";
 
-export type actionFunction = (
-    prevState: any,
-    formData: FormData
-  ) => Promise<{ message: string }>;
 
 export type PropertyCardProps = {
   id: string;
@@ -72,3 +68,33 @@ export type PropertyMetaStore1 = {
   favorites: Record<string, string | null>; // lưu favoriteId (hoặc null)
   setFavorite: (id: string, favoriteId: string | null) => void;
 };
+
+export type BookingWithProperty = {
+  id: string;
+  profileId: string | null;
+  guestId: string | null;
+  propertyId: string;
+  voucherId: string | null;
+  discount: number;
+  finalPaid: number | null;
+  orderTotal: number;
+  totalNights: number;
+  checkIn: Date;
+  checkOut: Date;
+  paymentStatus: boolean;
+  roomType: string;
+  createdAt: Date;
+  updatedAt: Date;
+  property: {
+    id: string;
+    name: string;
+    country: string;
+  };
+};
+export type actionFunction = (
+  prevState: any,
+  formData: FormData
+) => Promise<{
+  message: string;
+  redirectUrl?: string; // ✅ cho phép redirect nếu cần
+}>;

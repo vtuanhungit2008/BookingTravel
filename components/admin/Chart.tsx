@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import AdminTabs from './AdminTabs';
+
 
 type ChartPropsType = {
   data: {

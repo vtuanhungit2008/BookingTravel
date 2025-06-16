@@ -2,25 +2,31 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/utils/db";
 import HistoryList from "@/components/history/HistoryList.client";
 import { format, subDays } from "date-fns";
-
+import { PropertyCardProps } from "@/utils/types";
+export type HistoryListProps = {
+  history: {
+    id: string;
+    viewedAt: string; // 👈 Quan trọng: kiểu string
+    property: PropertyCardProps;
+  }[];
+};
 export default async function HistoryPage() {
   const { userId } = auth();
   if (!userId) return null;
 
-  // Chỉ lấy dữ liệu trong 24h gần nhất
   const oneDayAgo = subDays(new Date(), 1);
 
   const history = await prisma.viewHistory.findMany({
     where: {
       profileId: userId,
-      viewedAt: { gte: oneDayAgo }, // ✅ chỉ lấy trong 1 ngày
+      viewedAt: { gte: oneDayAgo },
     },
     orderBy: { viewedAt: "desc" },
     include: { property: true },
-    take: 200, // lấy dư để lọc trùng
+    take: 200,
   });
 
-  // ✅ Lọc trùng: mỗi property chỉ hiển thị 1 lần mỗi ngày
+  // ✅ Lọc trùng mỗi property mỗi ngày
   const uniqueMap = new Map<string, typeof history[number]>();
 
   for (const item of history) {
@@ -30,7 +36,12 @@ export default async function HistoryPage() {
     }
   }
 
-  const filtered = Array.from(uniqueMap.values());
+  // ✅ Chuyển Date → string để khớp kiểu props
+  const filtered = Array.from(uniqueMap.values()).map((item) => ({
+    id: item.id,
+    viewedAt: item.viewedAt.toISOString(),
+    property: item.property,
+  }));
 
   return (
     <section className="min-h-screen py-12 px-4 md:px-8 lg:px-20">
