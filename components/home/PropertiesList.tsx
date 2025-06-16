@@ -50,7 +50,7 @@ export default function PropertiesList({ properties }: { properties: PropertyCar
             disabled={currentPage === 1}
             className="px-4 py-2 rounded-lg border bg-white shadow-sm hover:bg-gray-100 disabled:opacity-40"
           >
-            ◀ Trang trước
+            Trang trước
           </button>
 
           {Array.from({ length: totalPages }, (_, i) => (
@@ -72,7 +72,7 @@ export default function PropertiesList({ properties }: { properties: PropertyCar
             disabled={currentPage === totalPages}
             className="px-4 py-2 rounded-lg border bg-white shadow-sm hover:bg-gray-100 disabled:opacity-40"
           >
-            Trang sau ▶
+            Trang sau 
           </button>
         </div>
       )}
