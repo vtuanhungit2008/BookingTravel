@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import image from '../data_test/00-Linux-1200x900.png'
-const bucket = 'data_bookingtravel';
+const bucket = 'data_bookingtravel/img';
 
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(

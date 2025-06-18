@@ -15,7 +15,7 @@ const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_KEY!
 );
-const BUCKET = 'data_bookingtravel';
+const BUCKET = 'data_bookingtravel/qr';
 
 const uploadQRImageToSupabase = async (base64: string): Promise<string> => {
   const base64Data = base64.replace(/^data:image\/png;base64,/, '');
