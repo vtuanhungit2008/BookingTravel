@@ -1,32 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/utils/db';
 
-export async function GET(req: NextRequest) {
+export const GET = async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
 
   if (!code) {
-    return NextResponse.json({ error: 'Thiếu mã QR' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing QR code' }, { status: 400 });
   }
 
-  const qr = await db.qRCode.findUnique({
-    where: { code },
-    include: { booking: true },
-  });
-
-  if (!qr) {
-    return NextResponse.json({ error: 'Mã QR không hợp lệ' }, { status: 404 });
-  }
-
-  if (!qr.scanned) {
-    await db.qRCode.update({
+  try {
+    const qr = await db.qRCode.findUnique({
       where: { code },
-      data: {
-        scanned: true,
-        scannedAt: new Date(),
+      include: {
+        booking: {
+          include: {
+            property: true, // ✅ Lấy thông tin property để truy xuất ID
+          },
+        },
       },
     });
-  }
 
-  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/booking/${qr.bookingId}`);
-}
+    if (!qr) {
+      return NextResponse.json({ error: 'QR code không hợp lệ' }, { status: 404 });
+    }
+
+    // ✅ Nếu chưa quét lần nào thì cập nhật thời gian
+    if (!qr.scannedAt) {
+      await db.qRCode.update({
+        where: { code },
+        data: { scannedAt: new Date(),
+          scanned:true,
+
+         }
+        ,
+      });
+    }
+
+    const propertyId = qr.booking.property.id;
+
+    return NextResponse.redirect(new URL(`/properties/${propertyId}`, req.url));
+  } catch (err) {
+    console.error('[QR_VERIFY_ERROR]', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+};
