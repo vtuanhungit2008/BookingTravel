@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-// Các route được xem là public (không cần đăng nhập)
+// Các route public (không cần đăng nhập)
 const isPublicRoute = createRouteMatcher([
   '/',
   '/properties(.*)',
@@ -9,13 +9,18 @@ const isPublicRoute = createRouteMatcher([
   '/bookings(.*)',
 ]);
 
-// Route dành cho admin (cần check userId)
+// Route admin (chỉ cho ADMIN_USER_ID)
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
+  // Bỏ qua middleware cho route API
+  if (req.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
   const authData = auth();
 
-  // Bảo vệ route admin (chỉ admin mới truy cập)
+  // Bảo vệ route admin
   if (isAdminRoute(req)) {
     const userId = authData.userId;
     const isAdminUser = userId === process.env.ADMIN_USER_ID;
@@ -25,7 +30,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  // Bảo vệ tất cả route không thuộc public
+  // Bảo vệ route không phải public
   if (!isPublicRoute(req) && !isAdminRoute(req)) {
     authData.protect();
   }
@@ -33,9 +38,8 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    '/',                          // trang chủ
-    '/((?!.*\\..*|_next).*)',     // tất cả route khác trừ file tĩnh
-    '/admin(.*)',                 // admin được bảo vệ riêng
-    // ❌ KHÔNG gồm '/api/(.*)' để tránh lỗi build
+    '/',                           // trang chủ
+    '/((?!.*\\..*|_next|api).*)',  // tất cả trừ file tĩnh, _next và API
+    '/admin(.*)',                  // admin
   ],
 };

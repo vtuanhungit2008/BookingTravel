@@ -115,7 +115,8 @@ model Booking {
   id            String     @id @default(uuid())
   profile       Profile?   @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
   profileId     String?
-discount      Int        @default(0)          // 🆕 Số tiền giảm
+
+  discount      Int        @default(0)
   finalPaid     Int?  
   guest         Guest?     @relation(fields: [guestId], references: [id], onDelete: Cascade)
   guestId       String?
@@ -135,6 +136,20 @@ discount      Int        @default(0)          // 🆕 Số tiền giảm
 
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+
+  qrCode        QRCode?    // Quan hệ 1-1
+}
+
+model QRCode {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  scanned    Boolean  @default(false)
+  scannedAt  DateTime?
+
+  bookingId  String   @unique // ✅ Bắt buộc để tạo quan hệ 1-1
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
 }
 
 model SavedRecommendation {

@@ -1,7 +1,8 @@
-'use client';
+// app/admin/dashboard/users/UserTable.tsx
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Pencil, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Pencil, Trash2, X, Loader2, Search } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -14,18 +15,18 @@ interface Profile {
 export function UserTable() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
-  const [formData, setFormData] = useState<Omit<Profile, 'id'>>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
+  const [query, setQuery] = useState("");
+  const [formData, setFormData] = useState<Omit<Profile, "id">>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
   });
 
   const fetchProfiles = async () => {
     setLoading(true);
-    const res = await fetch('/api/profiles');
+    const res = await fetch("/api/profiles");
     const data = await res.json();
     setProfiles(data);
     setLoading(false);
@@ -53,8 +54,8 @@ export function UserTable() {
     if (!editingUser) return;
 
     await fetch(`/api/profiles/${editingUser.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
 
@@ -63,17 +64,41 @@ export function UserTable() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xoá người dùng này?')) return;
-    await fetch(`/api/profiles/${id}`, { method: 'DELETE' });
+    if (!confirm("Bạn có chắc muốn xoá người dùng này?")) return;
+    await fetch(`/api/profiles/${id}`, { method: "DELETE" });
     fetchProfiles();
   };
 
+  const filteredProfiles = profiles.filter((p) => {
+    const keyword = query.toLowerCase();
+    return (
+      p.firstName.toLowerCase().includes(keyword) ||
+      p.lastName.toLowerCase().includes(keyword) ||
+      p.email.toLowerCase().includes(keyword) ||
+      p.username.toLowerCase().includes(keyword)
+    );
+  });
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-800">👤 Danh sách người dùng</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl ml-2 font-bold text-gray-800">Danh sách người dùng</h2>
+        <div className="relative">
+          <Search className="absolute w-4 h-4 left-3 top-2.5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm người dùng..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm w-64"
+          />
+        </div>
+      </div>
 
       {loading ? (
-        <p className="text-sm text-gray-500 italic">Đang tải dữ liệu...</p>
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Loader2 className="w-4 h-4 animate-spin" /> Đang tải dữ liệu...
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
           <table className="min-w-full text-sm text-left text-gray-700 bg-white">
@@ -86,7 +111,7 @@ export function UserTable() {
               </tr>
             </thead>
             <tbody>
-              {profiles.map((p) => (
+              {filteredProfiles.map((p) => (
                 <tr key={p.id} className="border-t">
                   <td className="px-4 py-3">{p.firstName} {p.lastName}</td>
                   <td className="px-4 py-3">{p.email}</td>
@@ -109,7 +134,7 @@ export function UserTable() {
                   </td>
                 </tr>
               ))}
-              {profiles.length === 0 && (
+              {filteredProfiles.length === 0 && (
                 <tr>
                   <td colSpan={4} className="text-center py-6 text-gray-400 italic">
                     Không có người dùng nào.

@@ -21,13 +21,18 @@ export async function GET(req: Request) {
         ],
       },
       select: {
-        id: true,
-        name: true,
-        tagline: true,
-        country: true,
-        image: true,
-        price: true,
-      },
+  id: true,
+  name: true,
+  tagline: true,
+  country: true,
+  image: true,
+  price: true,
+  category: true,
+  guests: true,
+  bedrooms: true,
+  beds: true,
+  baths: true,
+},
     });
 
     return NextResponse.json(properties);
