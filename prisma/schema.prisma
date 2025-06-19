@@ -37,6 +37,7 @@ model Profile {
   bookings             Booking[]
   savedRecommendations SavedRecommendation[]
   viewHistories        ViewHistory[]
+  spinHistories        SpinHistory[]  // ✅ Quan hệ ngược từ SpinHistory
 }
 
 model Guest {
@@ -146,7 +147,7 @@ model QRCode {
   scanned    Boolean  @default(false)
   scannedAt  DateTime?
 
-  bookingId  String   @unique // ✅ Bắt buộc để tạo quan hệ 1-1
+  bookingId  String   @unique
   booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   createdAt  DateTime @default(now())
@@ -176,4 +177,15 @@ model ViewHistory {
 
   @@index([profileId, viewedAt])
   @@unique([profileId, propertyId, viewedAt])
+}
+
+model SpinHistory {
+  id        String   @id @default(uuid())
+  profileId String
+  date      DateTime @default(now())
+  reward    String
+
+  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+
+  @@unique([profileId, date])
 }

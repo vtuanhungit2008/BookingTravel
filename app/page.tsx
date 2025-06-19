@@ -2,6 +2,7 @@ import { fetchFavoriteId, fetchProperties } from '@/utils/action';
 import PropertiesContainer from '@/components/home/PropertiesContainer';
 import CategoriesList from '@/components/home/CategoriesList';
 import LandingHero from '@/components/home/LandingHero';
+import SpinWheelPage from '@/components/home/Spin';
 
 export default async function HomePage({
   searchParams,
@@ -21,6 +22,7 @@ export default async function HomePage({
   return (
     <section className="w-full pb-8">
       {!hasSearch && <LandingHero />}
+   
       <CategoriesList {...searchParams} />
       <PropertiesContainer properties={properties} />
     </section>

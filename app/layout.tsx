@@ -6,6 +6,7 @@ import Providers from '@/providers';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import AssistantLauncher from '@/components/ai/AssistantLauncher';
+import FloatingSpinButton from '@/components/home/FloatingSpinButton';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,6 +26,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <AssistantLauncher /> 
+           <FloatingSpinButton />
           <main>{children}</main>
         </Providers>
       </body>
