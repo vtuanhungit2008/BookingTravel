@@ -73,7 +73,7 @@ export default function CheckoutPage() {
   }, []);
 
   if (!bookingId) return <p className="text-center mt-10">Không tìm thấy mã đặt phòng.</p>;
-  if (!clientSecret || !bookingInfo) return <p className="text-center mt-10">Đang tải dữ liệu...</p>;
+  if (!clientSecret || !bookingInfo) return <p className="text-center mt-10"></p>;
 
   const minutes = Math.floor(countdown / 60);
   const seconds = countdown % 60;

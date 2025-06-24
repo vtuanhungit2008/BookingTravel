@@ -601,7 +601,7 @@ export const createBookingAction = async (form: {
       return { message: 'Thiếu thông tin người dùng' };
     }
 
-return { message: "Đặt phòng thành công", redirectUrl: `/checkout?bookingId=${bookingId}` };
+return { message: "Đang tiến hành thanh toán", redirectUrl: `/checkout?bookingId=${bookingId}` };
   } catch (error) {
     return renderError(error);
   }

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/utils/db';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const GET = async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
@@ -15,7 +18,9 @@ export const GET = async (req: NextRequest) => {
       include: {
         booking: {
           include: {
-            property: true, // ✅ Lấy thông tin property để truy xuất ID
+            property: true,
+            guest: true,
+            profile: true,
           },
         },
       },
@@ -29,16 +34,41 @@ export const GET = async (req: NextRequest) => {
     if (!qr.scannedAt) {
       await db.qRCode.update({
         where: { code },
-        data: { scannedAt: new Date(),
-          scanned:true,
-
-         }
-        ,
+        data: {
+          scannedAt: new Date(),
+          scanned: true,
+        },
       });
+
+      // ✅ Lấy thông tin người nhận
+      const guest = qr.booking.guest;
+      const profile = qr.booking.profile;
+      const email = guest?.email || profile?.email;
+      const fullName = guest?.fullName || profile?.firstName || 'Quý khách';
+
+      const property = qr.booking.property;
+
+      // ✅ Nội dung chi tiết
+    
+      if (email) {
+        await resend.emails.send({
+          from: 'Booking App <onboarding@resend.dev>',
+          to: email,
+          subject: 'Thông tin phòng & Ưu đãi sau khi xác minh QR',
+          html: `
+            <p>Xin chào ${fullName},</p>
+            <p>Bạn đã checkin phòng thành công tại <strong>${property.name}</strong>.</p>
+            <hr/>
+    
+            <p>Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của chúng tôi.</p>
+            <p>Trân trọng,</p>
+            <p>Đội ngũ Booking App</p>
+          `,
+        });
+      }
     }
 
     const propertyId = qr.booking.property.id;
-
     return NextResponse.redirect(new URL(`/properties/${propertyId}`, req.url));
   } catch (err) {
     console.error('[QR_VERIFY_ERROR]', err);

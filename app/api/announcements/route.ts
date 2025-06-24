@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/utils/db';
 
-// Lấy danh sách thông báo
+// ✅ Revalidate thông báo mỗi 30 giây nếu cần
+export const revalidate = 30;
+
+// GET: Lấy thông báo
 export async function GET() {
   try {
     const announcements = await db.announcement.findMany({
@@ -17,7 +20,7 @@ export async function GET() {
   }
 }
 
-// Tạo mới một thông báo (dành cho admin hoặc hệ thống)
+// POST: Tạo thông báo
 export async function POST(req: NextRequest) {
   try {
     const { title, content, type, visible = true } = await req.json();

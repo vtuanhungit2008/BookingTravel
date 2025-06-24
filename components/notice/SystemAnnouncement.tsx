@@ -1,41 +1,39 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useRef } from 'react'
-import { Bell, ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react';
+import { Bell, ChevronDown, ChevronUp } from 'lucide-react';
 
 type Announcement = {
-  id: string
-  title: string
-  content: string
-  type: 'INFO' | 'PROMOTION' | 'URGENT' | 'UPDATE'
-}
+  id: string;
+  title: string;
+  content: string;
+  type: 'INFO' | 'PROMOTION' | 'URGENT' | 'UPDATE';
+};
 
 export default function NotificationBell() {
-  const [open, setOpen] = useState(false)
-  const [announcements, setAnnouncements] = useState<Announcement[]>([])
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const ref = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/announcements')
       .then((res) => res.json())
       .then(setAnnouncements)
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
+ useEffect(() => {
+  if (!open || announcements.length > 0) return;
+  fetch('/api/announcements')
+    .then((res) => res.json())
+    .then(setAnnouncements)
+    .catch(() => {});
+}, [open]);
 
   const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id))
-  }
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <div className="relative" ref={ref}>
@@ -53,7 +51,7 @@ export default function NotificationBell() {
       {open && (
         <div className="absolute right-0 mt-3 w-96 bg-white shadow-xl border border-gray-200 rounded-xl z-50 max-h-[420px] overflow-auto">
           <div className="p-4 border-b font-semibold text-gray-800 flex items-center gap-2">
-          Thông báo hệ thống
+            📢 Thông báo hệ thống
           </div>
 
           {announcements.length === 0 ? (
@@ -83,5 +81,5 @@ export default function NotificationBell() {
         </div>
       )}
     </div>
-  )
+  );
 }
