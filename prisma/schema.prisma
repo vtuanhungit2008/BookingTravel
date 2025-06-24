@@ -189,3 +189,18 @@
 
     @@unique([profileId, date])
   }
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  type      AnnouncementType @default(INFO)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+enum AnnouncementType {
+  INFO       // Tin tức chung
+  PROMOTION  // Khuyến mãi
+  URGENT     // Khẩn cấp
+  UPDATE     // Cập nhật hệ thống
+}

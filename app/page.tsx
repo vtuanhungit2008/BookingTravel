@@ -11,18 +11,15 @@ export default async function HomePage({
     category?: string;
     search?: string;
     location?: string;
+     priceRange?: string; // ← thêm dòng này
   };
 }) {
   
-  const hasSearch = !!searchParams.category || !!searchParams.search || !!searchParams.location;
+  const hasSearch = !!searchParams.category || !!searchParams.search || !!searchParams.location || !!searchParams.priceRange ;
   const properties = await fetchProperties(searchParams);
-
-
-  
   return (
     <section className="w-full pb-8">
       {!hasSearch && <LandingHero />}
-   
       <CategoriesList {...searchParams} />
       <PropertiesContainer properties={properties} />
     </section>

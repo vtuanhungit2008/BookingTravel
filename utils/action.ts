@@ -193,12 +193,23 @@ export const fetchProperties = async ({
   search = '',
   category,
   location,
+  priceRange,
 }: {
   search?: string;
   category?: string;
   location?: string;
+  priceRange?: string;
 }) => {
-  const { userId } = auth(); // 👈 đây là Clerk ID (clerkId)
+  const { userId } = auth();
+
+  const priceFilter = priceRange
+    ? (() => {
+        const [minStr, maxStr] = priceRange.split('-');
+        const min = parseInt(minStr) || 0;
+        const max = parseInt(maxStr) || 999999999;
+        return { price: { gte: min, lte: max } };
+      })()
+    : {};
 
   const properties = await db.property.findMany({
     where: {
@@ -218,6 +229,7 @@ export const fetchProperties = async ({
             { tagline: { contains: search, mode: 'insensitive' } },
           ],
         },
+        priceFilter,
       ],
     },
     include: {
@@ -225,7 +237,7 @@ export const fetchProperties = async ({
       favorites: userId
         ? {
             where: {
-              profileId: userId, // 👈 phải là clerkId (khớp với Favorite.profileId)
+              profileId: userId,
             },
             select: { id: true },
             take: 1,
@@ -248,12 +260,13 @@ export const fetchProperties = async ({
       price: p.price,
       country: p.country,
       tagline: p.tagline,
-      favoriteId: p.favorites?.[0]?.id ?? null, // 👈 chuẩn
+      favoriteId: p.favorites?.[0]?.id ?? null,
       rating: average,
       reviewCount: ratings.length,
     };
   });
 };
+
 
 
 export const fetchFavoriteId = async ({

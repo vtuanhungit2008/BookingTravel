@@ -8,6 +8,7 @@ import { Inter } from 'next/font/google';
 import AssistantLauncher from '@/components/ai/AssistantLauncher';
 import FloatingSpinButton from '@/components/home/FloatingSpinButton';
 
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {

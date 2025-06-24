@@ -51,13 +51,36 @@ export default function SpinModal({ onClose }: { onClose: () => void }) {
     }, 100)
   }
 
-  const onStopSpinning = () => {
-    setMustSpin(false)
-    setSpinning(false)
-    setHideWheelModal(true)
-    setTimeout(() => setShowCongrats(true), 300)
-  }
+const onStopSpinning = async () => {
+  setMustSpin(false)
+  setSpinning(false)
+  setHideWheelModal(true)
 
+  // 👇 Hiện modal chúc mừng ngay lập tức
+  setShowCongrats(true)
+
+  // 👇 Gửi thông báo hệ thống sau (không ảnh hưởng UI)
+  if (result && result !== "Không trúng") {
+    try {
+      await fetch("/api/announcements", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title: "🎁 Người dùng vừa trúng thưởng!",
+    content: `Phần thưởng: ${result}${
+      voucher?.code
+        ? `\nMã voucher: ${voucher.code}\nGiảm: ${voucher.discount}${voucher.type === "PERCENT" ? "%" : "đ"}\nHSD: ${new Date(voucher.expiresAt).toLocaleDateString()}`
+        : ""
+    }`,
+    type: "PROMOTION",
+  }),
+})
+    } catch (error) {
+      console.error("Gửi thông báo thất bại:", error)
+      // không cần show lỗi vì không ảnh hưởng trải nghiệm người dùng
+    }
+  }
+}
   return (
     <>
       {/* Modal quay số */}

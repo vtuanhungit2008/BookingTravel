@@ -3,6 +3,7 @@ import LinksDropdown from './LinksDropdown';
 import DarkMode from './DarkMode';
 import Logo from './Logo';
 import VisualSearch from '../ai/clip';
+import NotificationBell from '../notice/SystemAnnouncement';
 function Navbar() {
   return (
     <nav className='border-b'>
@@ -11,9 +12,11 @@ function Navbar() {
      
         <NavSearch />
         <div className='flex gap-4 items-center '>
-       
+      
           <LinksDropdown />
+          <NotificationBell/>
         </div>
+        
       </div>
     </nav>
   );
