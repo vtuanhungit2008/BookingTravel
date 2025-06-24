@@ -14,6 +14,7 @@
     "@clerk/clerk-sdk-node": "^5.0.60",
     "@clerk/nextjs": "^5.6.0",
     "@google-cloud/text-to-speech": "^6.1.0",
+    "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.4",
     "@prisma/client": "^5.20.0",
     "@radix-ui/react-checkbox": "^1.1.1",
@@ -73,7 +74,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
     "@types/leaflet": "^1.9.12",
-    "@types/node": "^20.17.50",
+    "@types/node": "^20.19.1",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -90,5 +91,21 @@
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
-  }
+  },
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vtuanhungit2008/BookingTravel.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vtuanhungit2008/BookingTravel/issues"
+  },
+  "homepage": "https://github.com/vtuanhungit2008/BookingTravel#readme",
+  "description": ""
 }

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Star } from 'lucide-react'; // Optional icon lib
 
 type Message = {
   role: 'user' | 'assistant';
@@ -12,134 +13,98 @@ export default function AssistantChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [recording, setRecording] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handlePayNow = async (bookingId: string) => {
-    try {
-      const res = await fetch('/api/payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId }),
+const sendMessage = async () => {
+  if (!input.trim()) return;
+
+  const newMessages: Message[] = [...messages, { role: 'user', text: input }];
+  setMessages([...newMessages, { role: 'assistant', text: '' }]);
+  setInput('');
+  setLoading(true);
+
+  try {
+    const res = await fetch('/api/assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          ...newMessages.map((m) => ({ role: m.role, content: m.text })),
+        ],
+      }),
+    });
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let replyText = '';
+
+    while (true) {
+      const { value, done } = await reader!.read();
+      if (done) break;
+      replyText += decoder.decode(value, { stream: true });
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: 'assistant', text: replyText };
+        return updated;
       });
-
-      const { clientSecret } = await res.json();
-      if (clientSecret) {
-        window.location.href = `/checkout/${clientSecret}`;
-      } else {
-        alert('Không tạo được session thanh toán');
-      }
-    } catch (err) {
-      console.error('Thanh toán lỗi:', err);
-      alert('Lỗi khi bắt đầu thanh toán');
     }
-  };
-
-  const startVoiceInput = () => {
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    if (!SpeechRecognition) {
-      alert('Trình duyệt của bạn không hỗ trợ ghi âm');
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'vi-VN';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setRecording(true);
-    recognition.onend = () => setRecording(false);
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Lỗi khi ghi âm:', event.error);
-      setRecording(false);
-    };
-
-    recognition.start();
-  };
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const newMessages: Message[] = [...messages, { role: 'user', text: input }];
-    setMessages(newMessages);
-    setInput('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await res.json();
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', text: data.reply || 'Không có phản hồi' },
-      ]);
-    } catch (error) {
-      console.error('Lỗi:', error);
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', text: '⚠️ Đã xảy ra lỗi. Vui lòng thử lại.' },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error('Lỗi stream:', err);
+    setMessages((prev) => [
+      ...prev.slice(0, -1),
+      { role: 'assistant', text: '⚠️ Đã xảy ra lỗi. Vui lòng thử lại.' },
+    ]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
+    <div className="flex flex-col h-full border rounded-lg shadow-sm overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-3 bg-gray-50 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`px-4 py-2 text-sm w-full max-w-screen-md whitespace-pre-wrap rounded-2xl shadow ${
+              className={`px-4 py-3 text-sm max-w-xl whitespace-pre-wrap rounded-2xl shadow-md ${
                 msg.role === 'user'
                   ? 'bg-black text-white rounded-br-none ml-auto'
-                  : 'bg-white text-gray-800 rounded-bl-none mr-auto'
+                  : 'bg-white text-gray-900 rounded-bl-none mr-auto'
               }`}
             >
               <ReactMarkdown
                 components={{
-                  a: ({ href, children }) => {
-                    if (!href) return <>{children}</>;
-                    const isPayLink = href.startsWith('#pay:');
-                    if (isPayLink) {
-                      const bookingId = href.replace('#pay:', '');
-                      return (
-                        <button
-                          className="text-green-600 underline hover:text-green-800"
-                          onClick={() => handlePayNow(bookingId)}
-                        >
-                          {children}
-                        </button>
-                      );
-                    }
-                    return (
-                      <a
-                        href={href}
-                        className="text-blue-600 underline hover:text-blue-800"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {children}
-                      </a>
-                    );
-                  },
+                  img: ({ src, alt }) => (
+                    <img
+                      src={src || ''}
+                      alt={alt}
+                      className="rounded-xl my-3 w-full object-cover"
+                    />
+                  ),
+                  a: ({ href, children }) => (
+                    <a
+                      href={href || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 font-semibold underline hover:text-blue-800"
+                    >
+                      {children}
+                    </a>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-base font-bold mt-3 mb-1">{children}</h3>
+                  ),
+                  li: ({ children }) => (
+                    <li className="list-disc list-inside text-sm">{children}</li>
+                  ),
+                  p: ({ children }) => <p className="mb-2">{children}</p>,
                 }}
               >
                 {msg.text}
@@ -148,7 +113,7 @@ export default function AssistantChat() {
           </div>
         ))}
         {loading && (
-          <div className="text-gray-400 text-sm italic text-left">Đang suy nghĩ...</div>
+          <div className="text-sm text-gray-400 italic">Đang suy nghĩ...</div>
         )}
         <div ref={scrollRef} />
       </div>
@@ -158,20 +123,9 @@ export default function AssistantChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          className="flex-1 border border-gray-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
-          placeholder="Nhập câu hỏi hoặc nhấn để nói..."
+          className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          placeholder="Nhập câu hỏi..."
         />
-
-        <button
-          onClick={startVoiceInput}
-          className={`px-3 py-2 rounded-full text-sm border ${
-            recording ? 'bg-red-500 text-white' : 'bg-gray-100 hover:bg-gray-200'
-          }`}
-          title="Nhấn để nói"
-        >
-          🎤
-        </button>
-
         <button
           onClick={sendMessage}
           disabled={loading}

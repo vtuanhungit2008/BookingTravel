@@ -1,4 +1,4 @@
-'use client';
+
 
 import AmenitiesInput from "@/components/form/amenitiesinput";
 import CategoriesInput from "@/components/form/categories";
@@ -20,7 +20,8 @@ import { redirect } from "next/navigation";
 
 export default async function EditRentalPage({ params }: { params: { id: string } }) {
   const property = await fetchRentalDetails(params.id);
-
+  console.log(property);
+  
   if (!property) redirect("/");
 
   let defaultAmenities: Amenity[] = [];

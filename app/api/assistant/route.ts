@@ -7,62 +7,113 @@ const openai = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
 });
 
-const formatProperties = (properties: any[]) => {
-  return properties
-    .map((prop) => `
-### 🏡 ${prop.name}
-![${prop.name}](${prop.image})
-
-${prop.tagline}
-- 🌍 Quốc gia: ${prop.country}
-- 🏧 Loại: ${prop.category}
-- 💰 Giá: $${prop.price}/đêm
-- 👥 Sức chứa: ${prop.guests} khách, ${prop.bedrooms} phòng ngủ, ${prop.beds} giường, ${prop.baths} phòng tắm 
-
-🔗 [Xem chi tiết](http://localhost:3000/properties/${prop.id})
-`)
-    .join('\n');
-};
+const normalize = (text: string = '') =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^(tinh|thanh pho|tp)\s+/i, '')
+    .trim();
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, history } = await req.json();
+    const { messages } = await req.json();
 
     const properties = await db.property.findMany({
-      take: 15,
+      take: 50,
       orderBy: { createdAt: 'desc' },
     });
 
-    const historyContext = history?.length
-      ? history.map((m: any, i: number) => `Lần ${i + 1}: ${m.text}`).join('\n')
-      : 'Không có lịch sử.';
+    // Tìm từ khóa địa điểm từ toàn bộ hội thoại
+    const fullText = messages.map((m: any) => m.content).join(' ');
+    const normalizedText = normalize(fullText);
+
+    const filteredProperties = properties.filter((p) => {
+      const combined = normalize(`${p.name} ${p.country}`);
+      return normalizedText && combined.includes(normalizedText);
+    });
+
+    const relevantProperties =
+      filteredProperties.length > 0 ? filteredProperties : properties;
 
     const systemPrompt = `
-Bạn là một trợ lý AI tư vấn chỗ ở.
+🧑‍💼 Bạn là một trợ lý ảo AI thân thiện trên nền tảng đặt khách sạn HomeAway.
 
-Dưới đây là các yêu cầu trước đây từ người dùng:
-${historyContext}
+🎯 Mục tiêu:
+- Hiểu nhu cầu, hoàn cảnh, mục đích chuyến đi và tư vấn khách sạn phù hợp.
+- Giao tiếp tự nhiên, không máy móc. Luôn gợi mở nếu người dùng chưa rõ ràng.
+- Chỉ dùng dữ liệu khách sạn từ JSON bên dưới. Không bịa, không thêm thông tin không có.
+- Duy trì ngữ cảnh đa lượt hội thoại (multi-turn). Ghi nhớ thông tin đã nói trước đó.
 
-Dưới đây là yêu cầu mới: "${message}"
+---
 
-Hãy:
-1. Phân tích toàn bộ nhu cầu của người dùng
-2. Ưu tiên các lựa chọn phù hợp với xu hướng cũ
-3. Gợi ý 3–5 chỗ ở phù hợp nhất từ danh sách dưới, kèm ảnh và link [Xem chi tiết].
+💡 Hành vi cần tuân thủ:
 
-${formatProperties(properties)}
-`;
+1. Hiểu **mục đích chuyến đi**:
+   - Nghỉ dưỡng → thiên nhiên, yên tĩnh.
+   - Công tác → trung tâm, thuận tiện.
+   - Gia đình → nhiều phòng, thân thiện trẻ em.
+
+2. Nhận biết **ngân sách**:
+   - Nếu người dùng đề cập (ví dụ: "dưới 1 triệu", "rẻ thôi", "không quá 100$") → lọc giá phù hợp.
+
+3. Nhận biết **nhóm người đi cùng**:
+   - Cặp đôi, đi một mình, gia đình, nhóm bạn → lọc khách sạn phù hợp.
+
+4. Nhận biết **địa điểm hoặc thời gian**:
+   - Nếu chưa có → hãy hỏi lại người dùng "Bạn muốn ở đâu? Khi nào đi?"
+
+5. Tránh lặp lại nguyên câu hỏi. Không nói điều hiển nhiên.
+
+---
+
+🗣️ Cách phản hồi:
+
+- Nếu chưa đủ thông tin:
+> 📌 Tôi cần thêm thông tin để tìm chỗ ở phù hợp. Bạn muốn ở đâu? Bao nhiêu người? Ngân sách khoảng bao nhiêu?
+
+- Nếu đủ thông tin:
+> ### 🏨 Danh sách khách sạn bạn cần:
+
+1. [Tên khách sạn](link)  
+   📍 Địa điểm: ...  
+   💰 Giá: ...  
+   📝 Mô tả: ...  
+   ✅ Vì sao phù hợp
+
+- Kết thúc nhẹ nhàng:
+> ✨ Bạn muốn tôi hỗ trợ bước tiếp theo không? (lọc tiện nghi, đặt phòng...)
+
+---
+
+📦 Dữ liệu khách sạn:
+
+${JSON.stringify(
+  relevantProperties.map((p) => ({
+    name: p.name,
+    link: `https://homeaway.com/properties/${p.id}`,
+    location: p.country,
+    price: `$${p.price}/đêm`,
+    description: p.description?.slice(0, 100) || '',
+  })),
+  null,
+  2
+)}
+    `.trim();
 
     const chat = await openai.chat.completions.create({
-      model: 'openai/gpt-3.5-turbo',
+      model: 'gpt-3.5-turbo',
+      max_tokens: 700,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: message },
+        ...messages,
       ],
     });
 
-    return NextResponse.json({ reply: chat.choices[0].message.content });
-  } catch (err) {
+    return new Response(chat.choices[0].message.content, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  } catch (err: any) {
     console.error('[Assistant Error]', err);
     return NextResponse.json({ error: 'Lỗi server' }, { status: 500 });
   }
