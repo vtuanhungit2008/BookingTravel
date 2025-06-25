@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import AssistantLauncher from '@/components/ai/AssistantLauncher';
 import FloatingSpinButton from '@/components/home/FloatingSpinButton';
+import { Toaster } from 'react-hot-toast';
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -28,6 +29,7 @@ export default function RootLayout({
           <Navbar />
           <AssistantLauncher /> 
            <FloatingSpinButton />
+            <Toaster position="top-right" /> {/* 👈 Quan trọng */}
           <main>{children}</main>
         </Providers>
       </body>

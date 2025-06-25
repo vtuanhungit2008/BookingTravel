@@ -14,11 +14,13 @@ export default function CallToAction() {
       });
 
       
-      window.scrollBy({
-        top: 600, 
-        left: 0,
-        behavior: 'smooth',
-      });
+      if (typeof window !== 'undefined') {
+  window.scrollBy({
+    top: 600,
+    left: 0,
+    behavior: 'smooth',
+  });
+}
     }
   };
 

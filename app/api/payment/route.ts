@@ -66,9 +66,10 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
 
     const origin = new Headers(req.headers).get('origin') ?? process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
 
-  const session = await stripe.checkout.sessions.create({
+const session = await stripe.checkout.sessions.create({
   ui_mode: 'embedded',
-  client_reference_id: `${bookingId}-${Date.now()}`, // 💥 ép Stripe tạo session mới
+  payment_method_types: ['card'], // ✅ THÊM DÒNG NÀY!
+  client_reference_id: `${bookingId}-${Date.now()}`,
   metadata: {
     bookingId,
     guestId: guestId ?? '',
@@ -92,6 +93,7 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   mode: 'payment',
   return_url: `${origin}/api/confirm?session_id={CHECKOUT_SESSION_ID}`,
 });
+
 
     return Response.json({ clientSecret: session.client_secret });
   } catch (error) {

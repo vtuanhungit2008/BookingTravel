@@ -13,6 +13,7 @@ import { findProvinceByCode } from './vietnamProvinces';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
+import { Resend } from 'resend';
 
 const renderError = (error: unknown): { message: string } => {
   console.log(error);
@@ -609,18 +610,54 @@ return { message: "Đang tiến hành thanh toán", redirectUrl: `/checkout?b
 
 
 
+const resend = new Resend(process.env.RESEND_API_KEY as string);
 
 export async function deleteBookingAction(prevState: { bookingId: string }) {
   const { bookingId } = prevState;
   const user = await getAuthUser();
 
   try {
-    const result = await db.booking.delete({
+    // Lấy thông tin booking trước khi xoá (include profile để lấy email)
+    const booking = await db.booking.findUnique({
+      where: {
+        id: bookingId,
+        profileId: user.id,
+      },
+      include: {
+        property: true,
+        profile: true, // ✅ thêm profile để lấy email
+      },
+    });
+
+    if (!booking) throw new Error("Booking không tồn tại hoặc bạn không có quyền.");
+
+    // Xoá booking
+    await db.booking.delete({
       where: {
         id: bookingId,
         profileId: user.id,
       },
     });
+
+    const email = booking.profile?.email;
+    const name = booking.profile?.firstName || "Quý khách";
+
+    // Gửi email thông báo nếu có email
+    if (email) {
+      await resend.emails.send({
+        from: "Booking App <onboarding@resend.dev>",
+        to: email,
+        subject: "Xác nhận huỷ đặt phòng",
+        html: `
+          <p>Xin chào ${name},</p>
+          <p>Yêu cầu huỷ đặt phòng tại <strong>${booking.property.name}</strong> đã được tiếp nhận.</p>
+          <p>Hệ thống đang tiến hành hoàn tiền, thời gian xử lý từ 3–5 ngày làm việc.</p>
+          <p>Mã đơn: <strong>${booking.id}</strong></p>
+          <p>Trân trọng,</p>
+          <p>Đội ngũ Booking App</p>
+        `,
+      });
+    }
 
     revalidatePath("/bookings");
     return { message: "Booking deleted successfully" };

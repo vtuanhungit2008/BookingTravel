@@ -2,41 +2,11 @@
 
 import { useState } from 'react';
 
-function extractImageUrl(md: string): string {
-  const match = md.match(/!\[.*?\]\((.*?)\)/);
-  return match?.[1] || '';
-}
-
-function extractName(md: string): string {
-  const match = md.match(/\*\*(.*?)\*\*/);
-  return match?.[1] || 'Không rõ tên';
-}
-
-function extractCountry(md: string): string {
-  const match = md.match(/\*\*.*\*\* - (.*)/);
-  return match?.[1] || '';
-}
-
-function extractPrice(md: string): string {
-  const match = md.match(/💰 Giá: (.*)/);
-  return match?.[1] || '';
-}
-
-function extractGuests(md: string): string {
-  const match = md.match(/👥 Sức chứa: (.*)/);
-  return match?.[1] || '';
-}
-
-function extractDetailLink(md: string): string {
-  const match = md.match(/\[Xem chi tiết\]\((.*?)\)/);
-  return match?.[1] || '#';
-}
-
 export default function VisualSearch() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<string[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   const [isClosing, setIsClosing] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,9 +31,13 @@ export default function VisualSearch() {
     });
 
     const data = await res.json();
-    const recommendations =
-      data?.recommendations || (data?.recommendation ? [data.recommendation] : []);
-    setResults(recommendations);
+
+    if (data?.matched) {
+      setResults(data.matched);
+    } else if (data?.message) {
+      setResults([{ message: data.message }]);
+    }
+
     setLoading(false);
     setFile(null);
     setPreview(null);
@@ -168,8 +142,8 @@ export default function VisualSearch() {
             >
               <h2 className="text-3xl font-bold text-center mb-6">Phòng đề xuất</h2>
 
-              {results[0].startsWith('🙁') ? (
-                <p className="text-center text-gray-500 text-lg">{results[0]}</p>
+              {results[0]?.message ? (
+                <p className="text-center text-gray-500 text-lg">{results[0].message}</p>
               ) : (
                 <div className="grid md:grid-cols-3 gap-6">
                   {results.map((item, idx) => (
@@ -178,19 +152,18 @@ export default function VisualSearch() {
                       className="bg-white rounded-2xl shadow-md overflow-hidden"
                     >
                       <img
-                        src={extractImageUrl(item)}
-                        alt={extractName(item)}
+                        src={item.image}
+                        alt={item.name}
                         className="w-full h-48 object-cover"
                       />
                       <div className="p-4 text-left">
-                        <h3 className="text-xl font-semibold mb-1">{extractName(item)}</h3>
-                        <p className="text-gray-500 text-sm mb-1">
-                          {extractCountry(item)}
-                        </p>
-                        <p className="text-gray-700 text-sm">{extractPrice(item)}</p>
-                        <p className="text-gray-700 text-sm mb-2">{extractGuests(item)}</p>
+                        <h3 className="text-xl font-semibold mb-1">{item.name}</h3>
+                        <p className="text-gray-500 text-sm mb-1">{item.country}</p>
+                        <p className="text-gray-700 text-sm">💰 Giá: ${item.price} / đêm</p>
+                        <p className="text-gray-700 text-sm">👥 Sức chứa: {item.guests} người</p>
+                        <p className="text-gray-600 text-sm">🔍 Giống nhau: {item.similarity}</p>
                         <a
-                          href={extractDetailLink(item)}
+                          href={`/properties/${item.id}`}
                           className="inline-block mt-2 text-sm font-medium text-white bg-black px-4 py-2 rounded hover:bg-gray-800 transition"
                         >
                           Xem chi tiết

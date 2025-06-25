@@ -4,7 +4,8 @@ import { useState } from "react"
 import { Wheel } from "react-custom-roulette"
 
 const prizes = [
-  { option: "Không trúng" },
+
+  { option: "Không trúng" },
   { option: "Voucher 5%" },
   { option: "Voucher 10%" },
   { option: "Giảm 100K" },

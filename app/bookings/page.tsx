@@ -10,10 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { IconButton } from "@/components/form/Buttons";
-import { deleteBookingAction, fetchBookings } from "@/utils/action";
-import FormContainer from "@/components/form/formcontanier";
+
+import { fetchBookings } from "@/utils/action";
+
 import { FaSuitcaseRolling } from "react-icons/fa";
+import { DeleteBooking } from "@/components/booking/DeleteBooking";
+
 
 async function BookingsPage() {
   const bookings = await fetchBookings();
@@ -100,8 +102,11 @@ async function BookingsPage() {
                       Complete
                     </TableCell>
                     <TableCell>
-                      <DeleteBooking bookingId={id} />
+                    
+                        <DeleteBooking bookingId={id} />
+               
                     </TableCell>
+
                   </TableRow>
                 );
               })}
@@ -112,14 +117,6 @@ async function BookingsPage() {
     </section>
   );
 }
-
-function DeleteBooking({ bookingId }: { bookingId: string }) {
-  const deleteBooking = deleteBookingAction.bind(null, { bookingId });
-  return (
-    <FormContainer action={deleteBooking}>
-      <IconButton actionType="delete" />
-    </FormContainer>
-  );
-}
-
 export default BookingsPage;
+
+
