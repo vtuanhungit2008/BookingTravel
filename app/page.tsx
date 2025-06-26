@@ -11,7 +11,7 @@ export default async function HomePage({
     category?: string;
     search?: string;
     location?: string;
-     priceRange?: string; // ← thêm dòng này
+    priceRange?: string; // ← thêm dòng này
   };
 }) {
   

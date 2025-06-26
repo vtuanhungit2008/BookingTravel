@@ -1,5 +1,3 @@
-
-
 import AmenitiesInput from "@/components/form/amenitiesinput";
 import CategoriesInput from "@/components/form/categories";
 import CountriesInput from "@/components/form/contriesinput";

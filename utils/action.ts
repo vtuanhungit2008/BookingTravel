@@ -190,6 +190,39 @@ export const createPropertyAction = async (
   redirect("/");
 };
 
+
+
+type RawProperty = {
+  id: string;
+  name: string;
+  tagline: string;
+  category: string;
+  image: string;
+  country: string;
+  description: string;
+  price: number;
+  guests: number;
+  bedrooms: number;
+  beds: number;
+  baths: number;
+  amenities: string;
+  createdAt: Date;
+  updatedAt: Date;
+  profileId: string;
+  reviews: { rating: number }[];
+  favorites?: { id: string }[];
+};
+
+// Hàm chuẩn hóa location
+const extractCityName = (input: string) => {
+  return input
+    .toLowerCase()
+    .normalize('NFC')
+    .replace(/^tỉnh\s+/i, '')
+    .replace(/^thành\s+phố\s+/i, '')
+    .trim();
+};
+
 export const fetchProperties = async ({
   search = '',
   category,
@@ -203,6 +236,7 @@ export const fetchProperties = async ({
 }) => {
   const { userId } = auth();
 
+  // Xử lý khoảng giá
   const priceFilter = priceRange
     ? (() => {
         const [minStr, maxStr] = priceRange.split('-');
@@ -212,24 +246,39 @@ export const fetchProperties = async ({
       })()
     : {};
 
+  // Normalize search tiếng Việt
+  const normalizedSearch = search.normalize('NFC');
+  const words = normalizedSearch
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.normalize('NFC'));
+
+  const searchConditions = words.length
+    ? [
+        {
+          OR: words.flatMap((word) => [
+            { name: { contains: word, mode: 'insensitive' } },
+            { tagline: { contains: word, mode: 'insensitive' } },
+          ]),
+        },
+      ]
+    : [];
+
+  const locationFilter = location
+    ? {
+        country: {
+          contains: extractCityName(location),
+          mode: 'insensitive',
+        },
+      }
+    : {};
+
   const properties = await db.property.findMany({
     where: {
       AND: [
         category ? { category } : {},
-        location
-          ? {
-              country: {
-                contains: location,
-                mode: 'insensitive',
-              },
-            }
-          : {},
-        {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { tagline: { contains: search, mode: 'insensitive' } },
-          ],
-        },
+        locationFilter,
+        ...searchConditions,
         priceFilter,
       ],
     },
@@ -237,15 +286,13 @@ export const fetchProperties = async ({
       reviews: { select: { rating: true } },
       favorites: userId
         ? {
-            where: {
-              profileId: userId,
-            },
+            where: { profileId: userId },
             select: { id: true },
             take: 1,
           }
         : false,
     },
-  });
+  }) as RawProperty[];
 
   return properties.map((p) => {
     const ratings = p.reviews.map((r) => r.rating);
@@ -267,6 +314,8 @@ export const fetchProperties = async ({
     };
   });
 };
+
+
 
 
 
