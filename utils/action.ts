@@ -253,17 +253,15 @@ export const fetchProperties = async ({
     .filter(Boolean)
     .map((word) => word.normalize('NFC'));
 
-  const searchConditions = words.length
-    ? [
-        {
-          OR: words.flatMap((word) => [
-            { name: { contains: word, mode: 'insensitive' } },
-            { tagline: { contains: word, mode: 'insensitive' } },
-          ]),
-        },
-      ]
-    : [];
+  // Mỗi từ phải khớp ít nhất trong name hoặc tagline
+  const searchConditions = words.map((word) => ({
+    OR: [
+      { name: { contains: word, mode: 'insensitive' } },
+      { tagline: { contains: word, mode: 'insensitive' } },
+    ],
+  }));
 
+  // Lọc theo địa điểm
   const locationFilter = location
     ? {
         country: {
@@ -273,6 +271,7 @@ export const fetchProperties = async ({
       }
     : {};
 
+  // Truy vấn danh sách bất động sản
   const properties = await db.property.findMany({
     where: {
       AND: [
@@ -294,6 +293,7 @@ export const fetchProperties = async ({
     },
   }) as RawProperty[];
 
+  // Xử lý dữ liệu trả về
   return properties.map((p) => {
     const ratings = p.reviews.map((r) => r.rating);
     const average =
@@ -314,7 +314,6 @@ export const fetchProperties = async ({
     };
   });
 };
-
 
 
 

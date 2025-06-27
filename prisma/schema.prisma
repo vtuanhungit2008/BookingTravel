@@ -1,207 +1,200 @@
-  datasource db {
-    provider  = "postgresql"
-    url       = env("DATABASE_URL")
-    directUrl = env("DIRECT_URL")
-    relationMode = "prisma"
-  }
+generator client {
+  provider = "prisma-client-js"
+}
 
-  generator client {
-    provider = "prisma-client-js"
-  }
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
+  relationMode = "prisma"
+}
 
-  enum RoomType {
-    STANDARD
-    VIP
-    PRESIDENT
-  }
+model Profile {
+  id                   String                @id @default(uuid())
+  clerkId              String                @unique
+  firstName            String
+  lastName             String
+  username             String
+  email                String
+  profileImage         String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  loyaltyPoints        Int                   @default(0)
+  ownedVouchers        Voucher[]             @relation("UserVouchers")
+  properties           Property[]
+  favorites            Favorite[]
+  reviews              Review[]
+  bookings             Booking[]
+  savedRecommendations SavedRecommendation[]
+  viewHistories        ViewHistory[]
+  spinHistories        SpinHistory[]
+}
 
-  enum VoucherType {
-    FIXED
-    PERCENT
-  }
+model Guest {
+  id        String    @id @default(uuid())
+  fullName  String
+  email     String
+  phone     String
+  createdAt DateTime  @default(now())
+  bookings  Booking[]
+}
 
-  model Profile {
-    id                   String                @id @default(uuid())
-    clerkId              String                @unique
-    firstName            String
-    lastName             String
-    username             String
-    email                String
-    profileImage         String
-    loyaltyPoints        Int                   @default(0)
-    createdAt            DateTime              @default(now())
-    updatedAt            DateTime              @updatedAt
-ownedVouchers Voucher[] @relation("UserVouchers")
-    properties           Property[]
-    favorites            Favorite[]
-    reviews              Review[]
-    bookings             Booking[]
-    savedRecommendations SavedRecommendation[]
-    viewHistories        ViewHistory[]
-    spinHistories        SpinHistory[]  // ✅ Quan hệ ngược từ SpinHistory
-  }
+model Property {
+  id                   String                @id @default(uuid())
+  name                 String
+  tagline              String
+  category             String
+  image                String
+  country              String
+  description          String
+  price                Int
+  guests               Int
+  bedrooms             Int
+  beds                 Int
+  baths                Int
+  amenities            String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  profileId            String
+  profile              Profile               @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  favorites            Favorite[]
+  reviews              Review[]
+  bookings             Booking[]
+  savedRecommendations SavedRecommendation[]
+  viewHistories        ViewHistory[]
+}
 
-  model Guest {
-    id        String   @id @default(uuid())
-    fullName  String
-    email     String
-    phone     String
-    createdAt DateTime @default(now())
+model Favorite {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  profileId  String
+  propertyId String
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
 
-    bookings  Booking[]
-  }
+model Review {
+  id         String   @id @default(uuid())
+  profileId  String
+  propertyId String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
 
-  model Property {
-    id                   String                @id @default(uuid())
-    name                 String
-    tagline              String
-    category             String
-    image                String
-    country              String
-    description          String
-    price                Int
-    guests               Int
-    bedrooms             Int
-    beds                 Int
-    baths                Int
-    amenities            String
-    createdAt            DateTime              @default(now())
-    updatedAt            DateTime              @updatedAt
+model Voucher {
+  id        String      @id @default(uuid())
+  code      String      @unique
+  discount  Int
+  type      VoucherType @default(FIXED)
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+  owners    Profile[]   @relation("UserVouchers")
+  usedBy    Booking[]
+}
 
-    profile              Profile               @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-    profileId            String
+model Booking {
+  id            String   @id @default(uuid())
+  profileId     String?
+  propertyId    String
+  orderTotal    Int
+  totalNights   Int
+  checkIn       DateTime
+  checkOut      DateTime
+  paymentStatus Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  roomType      RoomType @default(STANDARD)
+  guestId       String?
+  voucherId     String?
+  discount      Int      @default(0)
+  finalPaid     Int?
+  profile       Profile? @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  guest         Guest?   @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  voucher       Voucher? @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  qrCode        QRCode?
+}
 
-    favorites            Favorite[]
-    reviews              Review[]
-    bookings             Booking[]
-    savedRecommendations SavedRecommendation[]
-    viewHistories        ViewHistory[]
-  }
+model QRCode {
+  id        String    @id @default(uuid())
+  code      String    @unique
+  scanned   Boolean   @default(false)
+  scannedAt DateTime?
+  bookingId String    @unique
+  createdAt DateTime  @default(now())
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
 
-  model Favorite {
-    id         String   @id @default(uuid())
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+model SavedRecommendation {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  profileId  String
+  propertyId String
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-    profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-    profileId  String
+  @@unique([profileId, propertyId])
+}
 
-    property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-    propertyId String
-  }
+model ViewHistory {
+  id         String   @id @default(uuid())
+  profileId  String
+  propertyId String
+  viewedAt   DateTime @default(now())
+  profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-  model Review {
-    id         String   @id @default(uuid())
-    profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-    profileId  String
-    property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-    propertyId String
-    rating     Int
-    comment    String
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-  }
+  @@unique([profileId, propertyId, viewedAt])
+  @@index([profileId, viewedAt])
+}
 
-  model Voucher {
-    id         String      @id @default(uuid())
-    code       String      @unique
-    discount   Int
-    type       VoucherType @default(FIXED)
-    expiresAt  DateTime
-    createdAt  DateTime    @default(now())
-    owners Profile[] @relation("UserVouchers")
-    usedBy     Booking[]
-  }
-
-  model Booking {
-    id            String     @id @default(uuid())
-    profile       Profile?   @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-    profileId     String?
-
-    discount      Int        @default(0)
-    finalPaid     Int?  
-    guest         Guest?     @relation(fields: [guestId], references: [id], onDelete: Cascade)
-    guestId       String?
-
-    property      Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-    propertyId    String
-
-    voucher       Voucher?   @relation(fields: [voucherId], references: [id], onDelete: SetNull)
-    voucherId     String?
-
-    orderTotal    Int
-    totalNights   Int
-    checkIn       DateTime
-    checkOut      DateTime
-    paymentStatus Boolean    @default(false)
-    roomType      RoomType   @default(STANDARD)
-
-    createdAt     DateTime   @default(now())
-    updatedAt     DateTime   @updatedAt
-
-    qrCode        QRCode?    // Quan hệ 1-1
-  }
-
-  model QRCode {
-    id         String   @id @default(uuid())
-    code       String   @unique
-    scanned    Boolean  @default(false)
-    scannedAt  DateTime?
-
-    bookingId  String   @unique
-    booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-
-    createdAt  DateTime @default(now())
-  }
-
-  model SavedRecommendation {
-    id         String   @id @default(uuid())
-    createdAt  DateTime @default(now())
-
-    profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-    profileId  String
-
-    property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-    propertyId String
-
-    @@unique([profileId, propertyId])
-  }
-
-  model ViewHistory {
-    id         String   @id @default(uuid())
-    profileId  String
-    propertyId String
-    viewedAt   DateTime @default(now())
-
-    profile    Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-    property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-    @@index([profileId, viewedAt])
-    @@unique([profileId, propertyId, viewedAt])
-  }
-
-  model SpinHistory {
-    id        String   @id @default(uuid())
-    profileId String
-    date      DateTime @default(now())
-    reward    String
-
-    profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-
-    @@unique([profileId, date])
-  }
-model Announcement {
+model SpinHistory {
   id        String   @id @default(uuid())
+  profileId String
+  date      DateTime @default(now())
+  reward    String
+  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+
+  @@unique([profileId, date])
+}
+
+model Announcement {
+  id        String           @id @default(uuid())
   title     String
   content   String
   type      AnnouncementType @default(INFO)
-  visible   Boolean  @default(true)
-  createdAt DateTime @default(now())
+  visible   Boolean          @default(true)
+  createdAt DateTime         @default(now())
+}
+
+model UserVouchers {
+  A String
+  B String
+
+  @@unique([A, B], map: "_UserVouchers_AB_unique")
+  @@index([B], map: "_UserVouchers_B_index")
+  @@map("_UserVouchers")
+}
+
+enum RoomType {
+  STANDARD
+  VIP
+  PRESIDENT
+}
+
+enum VoucherType {
+  FIXED
+  PERCENT
 }
 
 enum AnnouncementType {
-  INFO       // Tin tức chung
-  PROMOTION  // Khuyến mãi
-  URGENT     // Khẩn cấp
-  UPDATE     // Cập nhật hệ thống
+  INFO
+  PROMOTION
+  URGENT
+  UPDATE
 }

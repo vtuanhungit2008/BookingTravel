@@ -83,7 +83,8 @@ export const GET = async (req: NextRequest) => {
 
     const receiverEmail = booking.guest?.email || booking.profile?.email;
     const receiverName = booking.guest?.fullName || booking.profile?.firstName || 'Quý khách';
-
+    console.log(receiverEmail);
+    
     // ✅ Email
     if (receiverEmail) {
       await resend.emails.send({

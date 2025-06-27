@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Tên bucket lưu ảnh
-const bucket = 'data_bookingtravel/img';
+const bucket = 'data_bookingtravel';
 
 // Tạo Supabase client duy nhất
 export const supabase = createClient(
-  process.env.SUPABASE_URL as string,
-  process.env.SUPABASE_KEY as string
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // ← dùng key có quyền ghi
 );
 
 // Upload ảnh từ client (file input)
@@ -21,7 +21,10 @@ export const uploadImage = async (file: File) => {
       upsert: true,
     });
 
-  if (error || !data) throw new Error('Image upload failed');
+if (error || !data) {
+  console.error('Lỗi upload ảnh:', error);
+  throw new Error('Tải ảnh lên thất bại: ' + error.message);
+}
 
   return supabase.storage.from(bucket).getPublicUrl(newName).data.publicUrl;
 };

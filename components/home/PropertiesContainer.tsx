@@ -18,8 +18,7 @@ export default function PropertiesContainer({
   useEffect(() => {
     setProperties(properties);
   }, [properties, setProperties]);
-  console.log(properties);
-  
+
   if (!stored || stored.length === 0) {
     return (
       <EmptyList

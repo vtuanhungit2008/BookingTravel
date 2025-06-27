@@ -18,7 +18,7 @@ import { redirect } from "next/navigation";
 
 export default async function EditRentalPage({ params }: { params: { id: string } }) {
   const property = await fetchRentalDetails(params.id);
-  console.log(property);
+  
   
   if (!property) redirect("/");
 

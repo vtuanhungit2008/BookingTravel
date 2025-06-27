@@ -16,8 +16,7 @@ import { auth } from "@clerk/nextjs/server";
 
 function LinksDropdown() {
   const { userId } = auth();
-  console.log("userid :", userId);
-
+  
   const isAdminUser = userId === process.env.ADMIN_USER_ID;
   
   if (isAdminUser) {
